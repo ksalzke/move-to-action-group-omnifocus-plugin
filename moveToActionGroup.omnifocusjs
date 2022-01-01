@@ -1,0 +1,25 @@
+
+/* global PlugIn */
+/* eslint spaced-comment: ["error", "always", { "exceptions": ["{"] }] */
+/*{
+"type": "action",
+"targets": ["omnifocus"],
+"author": "Kaitlin Salzke",
+"identifier": "com.KaitlinSalzke.assignActionGroup",
+"description": "Move tasks to an action group within their already-assigned project.",
+"label": "Move to Action Group",
+"shortLabel": "Move to Action Group",
+"image": "arrow.right.to.line.alt",
+"version": "0.0.1",
+}*/
+(() => {
+  const action = new PlugIn.Action(selection => {
+    
+  })
+
+  action.validate = selection => {
+    return true
+  }
+
+  return action
+})()
