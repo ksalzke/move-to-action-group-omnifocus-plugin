@@ -1,5 +1,5 @@
 
-/* global PlugIn */
+/* global PlugIn flattenedTags Alert Form moveTasks */
 /* eslint spaced-comment: ["error", "always", { "exceptions": ["{"] }] */
 /*{
 "type": "action",
@@ -10,15 +10,43 @@
 "label": "Move to Action Group",
 "shortLabel": "Move to Action Group",
 "image": "arrow.right.to.line.alt",
-"version": "0.0.1",
+"version": "1.0.0",
 }*/
 (() => {
-  const action = new PlugIn.Action(selection => {
-    
+  const action = new PlugIn.Action(async selection => {
+    const tag = flattenedTags.byName('Action Group')
+
+    const task = selection.tasks[0]
+
+    // get currently assigned project
+    const proj = task.containingProject || task.assignedContainer
+    if (proj === null) {
+      const warning = new Alert('No Project', 'The selected task has not been assigned to a project.')
+      warning.show()
+      return
+    }
+
+    // check if there are any relevant action groups
+    const groups = proj.flattenedTasks.filter(proj => proj.tags.includes(tag))
+    if (groups.length === 0) {
+      const warning = new Alert('No Action Groups', 'There are no action groups with the relevant tag in this project.')
+      warning.show()
+      return
+    }
+
+    // if one or more, show form
+    const form = new Form()
+    const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', groups, groups.map(group => group.name), groups[0], 'No action group')
+    actionGroupSelect.allowsNull = true
+    form.addField(actionGroupSelect)
+    await form.show('Select Action Group', 'Move')
+
+    // move to selected action group, if any
+    if (form.values.actionGroup !== null) moveTasks([task], form.values.actionGroup)
   })
 
   action.validate = selection => {
-    return true
+    return selection.tasks.length === 1
   }
 
   return action
