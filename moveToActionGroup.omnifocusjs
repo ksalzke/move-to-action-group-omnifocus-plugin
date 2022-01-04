@@ -27,11 +27,20 @@
     }
 
     // check if there are any relevant action groups
+    const addGroup = async () => {
+      const form = new Form()
+      form.addField(new Form.Field.String('groupName', 'Group Name'))
+      await form.show('Action Group Name', 'Create and Move')
+    }
+
     const groups = proj.flattenedTasks.filter(proj => proj.tags.includes(tag))
     if (groups.length === 0) {
       const warning = new Alert('No Action Groups', 'There are no action groups with the relevant tag in this project.')
-      warning.show()
-      return
+      warning.addOption('Add group')
+      warning.addOption('OK')
+      await warning.show(index => {
+        if (index === 0) addGroup()
+      })
     }
 
     // if one or more, show form
