@@ -19,15 +19,7 @@
     const task = selection.tasks[0]
     let group = null
 
-    // get currently assigned project - if none show warning
-    const proj = task.containingProject || task.assignedContainer
-    if (proj === null) {
-      const warning = new Alert('No Project', 'The selected task has not been assigned to a project.')
-      warning.show()
-      return
-    }
-
-    // check if there are any relevant action groups - if none show warning and option to add
+    // addGroup
     const addGroup = async () => {
       console.log('in addGroup')
       const form = new Form()
@@ -36,7 +28,28 @@
       return new Task(form.values.groupName, proj.ending)
     }
 
+    // get currently assigned project - if none show warning
+    const proj = task.containingProject || task.assignedContainer
+    if (proj === null) {
+      const warning = new Alert('No Project', 'The selected task has not been assigned to a project.')
+      warning.show()
+      return
+    }
+
+    // check which action groups exist
     const groups = proj.flattenedTasks.filter(proj => proj.tags.includes(tag))
+
+    // if there are relevant action groups show selection form
+    if (groups.length > 0) {
+      const form = new Form()
+      const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', groups, groups.map(group => group.name), groups[0], 'No action group')
+      actionGroupSelect.allowsNull = true
+      form.addField(actionGroupSelect)
+      await form.show('Select Action Group', 'Move')
+      group = form.values.groupName
+    }
+
+    // if there are none show warning
     if (groups.length === 0) {
       const warning = new Alert('No Action Groups', 'There are no action groups with the relevant tag in this project.')
       warning.addOption('Add group')
@@ -47,25 +60,8 @@
       }
     }
 
-    console.log('before return')
-
-    console.log('group: ' + group || 'null')
-    console.log(groups.length)
-    if (group === null && groups.length === 0) return
-
-    console.log('after return')
-
-    // if one or more, show form
-    const form = new Form()
-    const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', groups, groups.map(group => group.name), groups[0], 'No action group')
-    actionGroupSelect.allowsNull = true
-    form.addField(actionGroupSelect)
-    await form.show('Select Action Group', 'Move')
-
-    // move to selected action group, if any
-    if (form.values.actionGroup !== null) group = form.values.actionGroup
-
     console.log(group)
+
     moveTasks([task], group)
   })
 
