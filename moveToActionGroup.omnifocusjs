@@ -41,10 +41,10 @@
       const warning = new Alert('No Action Groups', 'There are no action groups with the relevant tag in this project.')
       warning.addOption('Add group')
       warning.addOption('OK')
-      await warning.show(async index => {
-        console.log('callback')
-        if (index === 0) group = await addGroup()
-      })
+      const alertIndex = await warning.show()
+      if (alertIndex === 0) {
+        group = await addGroup()
+      }
     }
 
     console.log('before return')
