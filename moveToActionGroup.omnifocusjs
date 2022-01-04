@@ -41,11 +41,12 @@
     // if there are relevant action groups show selection form
     if (groups.length > 0) {
       const form = new Form()
-      const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', groups, groups.map(group => group.name), groups[0], 'No action group')
+      const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group'], [...groups.map(group => group.name), 'New action group'], groups[0], 'No action group')
       actionGroupSelect.allowsNull = true
       form.addField(actionGroupSelect)
       await form.show('Select Action Group', 'Move')
-      moveTasks([task], form.values.actionGroup)
+      if (form.values.actionGroup === 'New action group') await addActionGroup()
+      else moveTasks([task], form.values.actionGroup)
     }
 
     // if there are none show warning
