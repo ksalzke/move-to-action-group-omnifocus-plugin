@@ -18,6 +18,15 @@
 
     const task = selection.tasks[0]
 
+    const addActionGroup = async () => {
+      const form = new Form()
+      form.addField(new Form.Field.String('groupName', 'Group Name'))
+      await form.show('Action Group Name', 'Create and Move')
+      const group = new Task(form.values.groupName, proj.ending)
+      group.addTag(tag)
+      moveTasks([task], group)
+    }
+
     // get currently assigned project - if none show warning
     const proj = task.containingProject || task.assignedContainer
     if (proj === null) {
@@ -45,14 +54,7 @@
       warning.addOption('Add group')
       warning.addOption('OK')
       const alertIndex = await warning.show()
-      if (alertIndex === 0) {
-        const form = new Form()
-        form.addField(new Form.Field.String('groupName', 'Group Name'))
-        await form.show('Action Group Name', 'Create and Move')
-        const group = new Task(form.values.groupName, proj.ending)
-        group.addTag(tag)
-        moveTasks([task], group)
-      }
+      if (alertIndex === 0) await addActionGroup()
     }
   })
 
