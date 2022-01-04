@@ -17,16 +17,6 @@
     const tag = flattenedTags.byName('Action Group')
 
     const task = selection.tasks[0]
-    let group = null
-
-    // addGroup
-    const addGroup = async () => {
-      console.log('in addGroup')
-      const form = new Form()
-      form.addField(new Form.Field.String('groupName', 'Group Name'))
-      await form.show('Action Group Name', 'Create and Move')
-      return new Task(form.values.groupName, proj.ending)
-    }
 
     // get currently assigned project - if none show warning
     const proj = task.containingProject || task.assignedContainer
@@ -46,7 +36,7 @@
       actionGroupSelect.allowsNull = true
       form.addField(actionGroupSelect)
       await form.show('Select Action Group', 'Move')
-      group = form.values.groupName
+      moveTasks([task], form.values.actionGroup)
     }
 
     // if there are none show warning
@@ -56,13 +46,14 @@
       warning.addOption('OK')
       const alertIndex = await warning.show()
       if (alertIndex === 0) {
-        group = await addGroup()
+        const form = new Form()
+        form.addField(new Form.Field.String('groupName', 'Group Name'))
+        await form.show('Action Group Name', 'Create and Move')
+        const group = new Task(form.values.groupName, proj.ending)
+        group.addTag(tag)
+        moveTasks([task], group)
       }
     }
-
-    console.log(group)
-
-    moveTasks([task], group)
   })
 
   action.validate = selection => {
