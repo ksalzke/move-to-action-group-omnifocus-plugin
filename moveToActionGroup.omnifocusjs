@@ -1,5 +1,5 @@
 
-/* global PlugIn flattenedTags Alert Form moveTasks Task */
+/* global PlugIn flattenedTags Alert Form moveTasks Task*/
 /* eslint spaced-comment: ["error", "always", { "exceptions": ["{"] }] */
 /*{
 "type": "action",
@@ -18,13 +18,33 @@
 
     const tasks = selection.tasks
 
+    // FUNCTION: allow user to select location of child task
+    const promptAndMove = async (tasks, group) => {
+      const locationForm = async () => {
+        const form = new Form()
+        form.addField(new Form.Field.Option(
+          'taskLocation',
+          'Insert after',
+          ['beginning', ...group.children],
+          ['(beginning)', ...group.children.map(child => child.name)],
+          group.children[group.children.length - 1]))
+        await form.show('Task Location', 'Move')
+        return (form.values.taskLocation === 'beginning') ? group.beginning : form.values.taskLocation.after
+      }
+      const location = group.flattenedTasks.length < 1 ? group.ending : await locationForm()
+      const ids = tasks.map(task => task.id.primaryKey)
+      moveTasks(tasks, location)
+      ids.forEach(id => Task.byIdentifier(id).removeTag(tag))
+    }
+
+    // FUNCTION: prompt user for the name of a new action group, create and move
     const addActionGroup = async () => {
       const form = new Form()
       form.addField(new Form.Field.String('groupName', 'Group Name'))
       await form.show('Action Group Name', 'Create and Move')
       const group = new Task(form.values.groupName, proj.ending)
       group.addTag(tag)
-      moveTasks(tasks, group)
+      await promptAndMove(tasks, group)
     }
 
     // get currently assigned project - if none show warning
@@ -55,7 +75,7 @@
       form.addField(actionGroupSelect)
       await form.show('Select Action Group', 'Move')
       if (form.values.actionGroup === 'New action group') await addActionGroup()
-      else moveTasks(tasks, form.values.actionGroup)
+      else await promptAndMove(tasks, form.values.actionGroup)
     }
 
     // if there are none show warning
