@@ -68,7 +68,10 @@
   })
 
   action.validate = selection => {
-    return selection.tasks.length === 1
+    if (selection.tasks.length < 1) return false
+
+    const project = selection.tasks[0].containingProject || selection.tasks[0].assignedContainer
+    return selection.tasks.every(task => task.containingProject === project || task.assignedContainer === project)
   }
 
   return action
