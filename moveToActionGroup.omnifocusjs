@@ -39,9 +39,17 @@
     const groups = proj.flattenedTasks.filter(proj => proj.tags.includes(tag))
 
     // if there are relevant action groups show selection form
+    const getGroupPath = (task) => {
+      const getPath = (task) => {
+        if (task.parent === task.containingProject.task) return task.name
+        else return `${getPath(task.parent)} > ${task.name}`
+      }
+      return getPath(task)
+    }
+
     if (groups.length > 0) {
       const form = new Form()
-      const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group'], [...groups.map(group => group.name), 'New action group'], groups[0], 'No action group')
+      const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group'], [...groups.map(getGroupPath), 'New action group'], groups[0], 'No action group')
       actionGroupSelect.allowsNull = true
       form.addField(actionGroupSelect)
       await form.show('Select Action Group', 'Move')
