@@ -16,7 +16,7 @@
   const action = new PlugIn.Action(async selection => {
     const tag = flattenedTags.byName('Action Group')
 
-    const task = selection.tasks[0]
+    const tasks = selection.tasks
 
     const addActionGroup = async () => {
       const form = new Form()
@@ -28,9 +28,10 @@
     }
 
     // get currently assigned project - if none show warning
-    const proj = task.containingProject || task.assignedContainer
+    const proj = tasks[0].containingProject || tasks[0].assignedContainer
     if (proj === null) {
-      const warning = new Alert('No Project', 'The selected task has not been assigned to a project.')
+      const message = tasks.length > 1 ? 'The selected tasks have not been assigned to a project.' : 'The selected task has not been assigned to a project'
+      const warning = new Alert('No Project', message)
       warning.show()
       return
     }
@@ -54,7 +55,7 @@
       form.addField(actionGroupSelect)
       await form.show('Select Action Group', 'Move')
       if (form.values.actionGroup === 'New action group') await addActionGroup()
-      else moveTasks([task], form.values.actionGroup)
+      else moveTasks(tasks, form.values.actionGroup)
     }
 
     // if there are none show warning
@@ -68,7 +69,10 @@
   })
 
   action.validate = selection => {
-    return selection.tasks.length === 1
+    if (selection.tasks.length < 1) return false
+
+    const project = selection.tasks[0].containingProject || selection.tasks[0].assignedContainer
+    return selection.tasks.every(task => task.containingProject === project || task.assignedContainer === project)
   }
 
   return action
