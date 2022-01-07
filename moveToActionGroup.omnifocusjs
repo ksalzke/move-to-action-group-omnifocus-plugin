@@ -1,5 +1,5 @@
 
-/* global PlugIn flattenedTags Alert Form moveTasks Task*/
+/* global PlugIn flattenedTags Alert Form moveTasks Task save */
 /* eslint spaced-comment: ["error", "always", { "exceptions": ["{"] }] */
 /*{
 "type": "action",
@@ -32,9 +32,13 @@
         return (form.values.taskLocation === 'beginning') ? group.beginning : form.values.taskLocation.after
       }
       const location = group.flattenedTasks.length < 1 ? group.ending : await locationForm()
-      const ids = tasks.map(task => task.id.primaryKey)
+      // check if there are tags before moving - if none action group tag will be inherited and needs to be removed
+      const hasExistingTags = tasks.map(task => task.tags.length > 0)
       moveTasks(tasks, location)
-      ids.forEach(id => Task.byIdentifier(id).removeTag(tag))
+      save()
+      for (let i = 0; i < tasks.length; i++) {
+        if (!hasExistingTags[i]) tasks[i].removeTag(tag)
+      }
     }
 
     // FUNCTION: prompt user for the name of a new action group, create and move
