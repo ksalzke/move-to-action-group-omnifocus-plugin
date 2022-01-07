@@ -24,7 +24,7 @@
       await form.show('Action Group Name', 'Create and Move')
       const group = new Task(form.values.groupName, proj.ending)
       group.addTag(tag)
-      moveTasks([task], group)
+      moveTasks(tasks, group)
     }
 
     // get currently assigned project - if none show warning
