@@ -10,7 +10,7 @@
 "label": "Move to Action Group",
 "shortLabel": "Move to Action Group",
 "image": "arrow.right.to.line.alt",
-"version": "1.0.0",
+"version": "2.0.0",
 }*/
 (() => {
   const action = new PlugIn.Action(async selection => {
