@@ -1,5 +1,5 @@
 
-/* global PlugIn flattenedTags Alert Form moveTasks Task save projectsMatching tagsMatching */
+/* global PlugIn flattenedTags Alert Form moveTasks Task save projectsMatching tagsMatching Device */
 /* eslint spaced-comment: ["error", "always", { "exceptions": ["{"] }] */
 /*{
 "type": "action",
@@ -10,7 +10,7 @@
 "label": "Move to Action Group",
 "shortLabel": "Move to Action Group",
 "image": "arrow.right.to.line.alt",
-"version": "2.1.0",
+"version": "2.2.0",
 }*/
 (() => {
   const action = new PlugIn.Action(async selection => {
@@ -115,6 +115,14 @@
       return results[menuItemIndex]
     }
 
+    // FUNCTION: go to a task
+    const goTo = async (task) => {
+      // new tab - only Mac supported
+      if (Device.current.mac) await document.newTabOnWindow(document.windows[0])
+      URL.fromString('omnifocus:///task/' + task.containingProject.id.primaryKey).call(() => {})
+      URL.fromString('omnifocus:///task/' + task.id.primaryKey).call(() => {})
+    }
+
     // get currently assigned project - if none show warning
     const proj = tasks[0].containingProject || tasks[0].assignedContainer || await searchForm(projectsMatching, 'Select a project')
     if (proj === null) {
@@ -148,18 +156,25 @@
       const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group'], [...groups.map(getGroupPath), 'New action group'], groups[0], 'No action group')
       actionGroupSelect.allowsNull = true
       form.addField(actionGroupSelect)
+      form.addField(new Form.Field.Checkbox('goTo', 'Show task in project after moving', false))
       await form.show('Select Action Group', 'Move')
       if (form.values.actionGroup === 'New action group') await addActionGroup()
       else await promptAndMove(tasks, form.values.actionGroup)
+      if (form.values.goTo) goTo(tasks[0])
     }
 
     // if there are none show warning
     if (groups.length === 0) {
       const warning = new Alert('No Action Groups', 'There are no action groups with the relevant tag in this project.')
       warning.addOption('Add group')
+      warning.addOption('Add group and show task in project')
       warning.addOption('OK')
       const alertIndex = await warning.show()
       if (alertIndex === 0) await addActionGroup()
+      if (alertIndex === 1) {
+        await addActionGroup()
+        goTo(tasks[0])
+      }
     }
   })
 
