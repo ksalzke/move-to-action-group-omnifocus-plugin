@@ -10,7 +10,7 @@
 "label": "Move to Action Group",
 "shortLabel": "Move to Action Group",
 "image": "arrow.right.to.line.alt",
-"version": "2.3.0",
+"version": "2.4.0",
 }*/
 (() => {
   const action = new PlugIn.Action(async selection => {
@@ -124,7 +124,7 @@
     }
 
     // get currently assigned project - if none show warning
-    const proj = tasks[0].containingProject || tasks[0].assignedContainer || await searchForm(projectsMatching, 'Select a project')
+    const proj = tasks[0].assignedContainer !== null ? tasks[0].assignedContainer : await searchForm(projectsMatching, 'Select a project')
     if (proj === null) {
       const message = tasks.length > 1 ? 'The selected tasks have not been assigned to a project.' : 'The selected task has not been assigned to a project'
       const warning = new Alert('No Project', message)
