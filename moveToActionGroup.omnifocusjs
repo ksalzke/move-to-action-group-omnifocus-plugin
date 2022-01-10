@@ -10,7 +10,7 @@
 "label": "Move to Action Group",
 "shortLabel": "Move to Action Group",
 "image": "arrow.right.to.line.alt",
-"version": "2.0.0",
+"version": "2.1.0",
 }*/
 (() => {
   const action = new PlugIn.Action(async selection => {
@@ -126,11 +126,8 @@
 
     // check that a tag has been assigned to all tasks
     const untagged = tasks.filter(task => task.tags.length === 0)
-    console.log(untagged)
     if (untagged.length > 0) {
       const tag = await searchForm(tagsMatching, 'Select a tag to apply to untagged tasks')
-      console.log(untagged)
-      console.log(tag)
       untagged.forEach(task => task.addTag(tag))
     }
 
