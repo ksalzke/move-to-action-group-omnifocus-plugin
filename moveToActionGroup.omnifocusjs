@@ -10,7 +10,7 @@
 "label": "Move to Action Group",
 "shortLabel": "Move to Action Group",
 "image": "arrow.right.to.line.alt",
-"version": "2.4.0",
+"version": "2.4.1",
 }*/
 (() => {
   const action = new PlugIn.Action(async selection => {
@@ -147,7 +147,7 @@
     }
 
     // check which action groups exist
-    const groups = proj.flattenedTasks.filter(proj => proj.tags.includes(tag))
+    const groups = proj.flattenedTasks.filter(task => task.tags.includes(tag) && (task.taskStatus === Task.Status.Available || task.taskStatus === Task.Status.Blocked))
 
     // if there are relevant action groups show selection form
     const getGroupPath = (task) => {
