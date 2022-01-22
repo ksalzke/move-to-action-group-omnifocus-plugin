@@ -4,6 +4,7 @@
     const tag = flattenedTags.byName('Action Group')
 
     const tasks = selection.tasks
+    let goToSetting = false
 
     // FUNCTION: allow user to select location of child task
     const promptAndMove = async (tasks, group) => {
@@ -15,7 +16,9 @@
           ['beginning', ...group.children],
           ['(beginning)', ...group.children.map(child => child.name)],
           group.children[group.children.length - 1]))
+        form.addField(new Form.Field.Checkbox('goTo', 'Show task in project after moving', goToSetting))
         await form.show('Task Location', 'Move')
+        goToSetting = form.values.goTo
         return (form.values.taskLocation === 'beginning') ? group.beginning : form.values.taskLocation.after
       }
       const location = group.flattenedTasks.length < 1 ? group.ending : await locationForm()
@@ -150,11 +153,12 @@
       const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group'], [...groups.map(getGroupPath), 'New action group'], groups[0], 'No action group')
       actionGroupSelect.allowsNull = true
       form.addField(actionGroupSelect)
-      form.addField(new Form.Field.Checkbox('goTo', 'Show task in project after moving', false))
+      form.addField(new Form.Field.Checkbox('goTo', 'Show task in project after moving', goToSetting))
       await form.show('Select Action Group', 'Move')
+      goToSetting = form.values.goTo
       if (form.values.actionGroup === 'New action group') await addActionGroup()
       else await promptAndMove(tasks, form.values.actionGroup)
-      if (form.values.goTo) goTo(tasks[0])
+      if (goToSetting) goTo(tasks[0])
     }
 
     // if there are none show warning
