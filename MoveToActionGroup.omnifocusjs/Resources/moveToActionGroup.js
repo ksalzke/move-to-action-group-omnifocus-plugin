@@ -1,17 +1,4 @@
-
 /* global PlugIn flattenedTags Alert Form moveTasks Task save projectsMatching tagsMatching Device */
-/* eslint spaced-comment: ["error", "always", { "exceptions": ["{"] }] */
-/*{
-"type": "action",
-"targets": ["omnifocus"],
-"author": "Kaitlin Salzke",
-"identifier": "com.KaitlinSalzke.assignActionGroup",
-"description": "Move tasks to an action group within their already-assigned project.",
-"label": "Move to Action Group",
-"shortLabel": "Move to Action Group",
-"image": "arrow.right.to.line.alt",
-"version": "2.4.1",
-}*/
 (() => {
   const action = new PlugIn.Action(async selection => {
     const tag = flattenedTags.byName('Action Group')
