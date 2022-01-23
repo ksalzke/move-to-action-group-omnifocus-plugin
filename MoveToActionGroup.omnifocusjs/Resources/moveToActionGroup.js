@@ -48,7 +48,7 @@
       await promptAndMove(tasks, group)
     }
 
-    // FUNCITON: show search form - adapted from code shared by Sal Soghoian
+    // FUNCTION: show search form - adapted from code shared by Sal Soghoian
     const searchForm = async (matchingFunction, prompt) => {
       const form = new Form()
 
