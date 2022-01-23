@@ -13,12 +13,13 @@
     const promptAndMove = async (tasks, group) => {
       const locationForm = async () => {
         const form = new Form()
+        const remainingChildren = group.children.filter(child => child.taskStatus === Task.Status.Available || child.taskStatus === Task.Status.Blocked)
         form.addField(new Form.Field.Option(
           'taskLocation',
           'Insert after',
-          ['beginning', ...group.children],
-          ['(beginning)', ...group.children.map(child => child.name)],
-          group.children[group.children.length - 1]))
+          ['beginning', ...remainingChildren],
+          ['(beginning)', ...remainingChildren.map(child => child.name)],
+          remainingChildren[remainingChildren.length - 1]))
         form.addField(new Form.Field.Checkbox('goTo', 'Show task in project after moving', goToSetting))
         await form.show('Task Location', 'Move')
         goToSetting = form.values.goTo
