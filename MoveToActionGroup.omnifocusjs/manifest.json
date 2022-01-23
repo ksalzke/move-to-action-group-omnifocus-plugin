@@ -8,7 +8,15 @@
     {
       "identifier": "moveToActionGroup",
       "image": "arrow.right.to.line.alt"
+    },
+    {
+      "identifier": "goToLastMoved",
+      "image": "backward.fill"
     }
   ],
-  "libraries": []
+  "libraries": [
+    {
+      "identifier": "moveToActionGroupLib"
+    }
+  ]
 }
