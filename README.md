@@ -18,7 +18,7 @@ A tag named 'Action Group' is required. This should be applied to action groups 
 
 # Actions
 
-This plug-in contains the following action:
+This plug-in contains the following actions:
 
 ## Move to Action Group
 
@@ -46,7 +46,7 @@ The action then completes the following:
 
 ![Action group name prompt](https://user-images.githubusercontent.com/16893787/148858694-0d5715ac-71bd-4c5f-b5f8-05b0b1080fd5.png)
 
-5. If the action group has more than one task, the user is prompted to select where in the group the selected task(s) should be moved. By default, tasks are added to the end of the action group.
+5. If the action group has more than one task, the user is prompted to select where in the group the selected task(s) should be moved. By default, tasks are added to the end of the action group. There is also the option to navigate to the task after it is moved.
 
 ![Location prompt](https://user-images.githubusercontent.com/16893787/148858547-7291b2bf-6dfb-43bb-af93-6f4b401fa22c.png)
 
@@ -54,3 +54,12 @@ The screenshot below shows the created hierarchy:
 
 ![Resulting hierarchy](https://user-images.githubusercontent.com/16893787/148858753-44977df5-eca5-4859-a525-c6424a2e352b.png)
 
+## Go To Last Moved
+
+This action navigates to the last task that was moved by this plug-in.
+
+# Functions
+
+## `goTo (task : Task)`
+
+This asynchronous function navigates to the relevant task. (On macOS, a new window/tab is opened.)
