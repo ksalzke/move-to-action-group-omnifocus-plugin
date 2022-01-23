@@ -1,6 +1,9 @@
-/* global PlugIn flattenedTags Alert Form moveTasks Task save projectsMatching tagsMatching Device */
+/* global PlugIn flattenedTags Alert Form moveTasks Task save projectsMatching tagsMatching Preferences */
 (() => {
+  const preferences = new Preferences()
+
   const action = new PlugIn.Action(async selection => {
+    const lib = this.libraries[0]
     const tag = flattenedTags.byName('Action Group')
 
     const tasks = selection.tasks
@@ -29,6 +32,9 @@
       for (let i = 0; i < tasks.length; i++) {
         if (!hasExistingTags[i]) tasks[i].removeTag(tag)
       }
+
+      // store last moved task as preference
+      preferences.write('lastMovedID', tasks[0].id.primaryKey)
     }
 
     // FUNCTION: prompt user for the name of a new action group, create and move
@@ -105,14 +111,6 @@
       return results[menuItemIndex]
     }
 
-    // FUNCTION: go to a task
-    const goTo = async (task) => {
-      // new tab - only Mac supported
-      if (Device.current.mac) await document.newTabOnWindow(document.windows[0])
-      URL.fromString('omnifocus:///task/' + task.containingProject.id.primaryKey).call(() => {})
-      URL.fromString('omnifocus:///task/' + task.id.primaryKey).call(() => {})
-    }
-
     // get currently assigned project - if none show warning
     const proj = tasks[0].assignedContainer !== null ? tasks[0].assignedContainer : await searchForm(projectsMatching, 'Select a project')
     if (proj === null) {
@@ -158,7 +156,7 @@
       goToSetting = form.values.goTo
       if (form.values.actionGroup === 'New action group') await addActionGroup()
       else await promptAndMove(tasks, form.values.actionGroup)
-      if (goToSetting) goTo(tasks[0])
+      if (goToSetting) lib.goTo(tasks[0])
     }
 
     // if there are none show warning
@@ -171,7 +169,7 @@
       if (alertIndex === 0) await addActionGroup()
       if (alertIndex === 1) {
         await addActionGroup()
-        goTo(tasks[0])
+        lib.goTo(tasks[0])
       }
     }
   })
