@@ -165,8 +165,10 @@
       const form = new Form()
       const actions = ['Add group', 'Add to root of project']
       form.addField(new Form.Field.Option('action', 'Action', actions, actions, actions[0]))
-      form.addField(new Form.Field.Checkbox('goTo', 'Show in project after moving', false))
+      form.addField(new Form.Field.Checkbox('goTo', 'Show in project after moving', goToSetting))
       await form.show('There are no action groups with the relevant tag in this project.\n What would you like to do?', 'OK')
+
+      goToSetting = form.values.goTo
 
       switch (form.values.action) {
         case 'Add group':
@@ -177,7 +179,7 @@
           break
       }
 
-      if (form.values.goTo) goTo(tasks[0])
+      if (goToSetting) lib.goTo(tasks[0])
     }
   })
 
