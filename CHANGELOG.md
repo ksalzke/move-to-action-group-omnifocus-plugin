@@ -1,3 +1,13 @@
+## [3.1.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.1.0...v3.1.1) (2022-02-22)
+
+
+### Bug Fixes
+
+* :bug: convert Alert to Form re 'no action group' ([59cf6eb](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/59cf6ebe998229914885b872af32620c4477b82c))
+* :bug: fix go-to logic in 'no action group' case ([e53b573](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/e53b57376126ec102567e21c9ca069c483e1754c))
+
+
+
 # [3.1.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v2.4.1...v3.1.0) (2022-01-23)
 
 
