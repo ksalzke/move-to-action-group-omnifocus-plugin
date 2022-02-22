@@ -162,16 +162,22 @@
 
     // if there are none show warning
     if (groups.length === 0) {
-      const warning = new Alert('No Action Groups', 'There are no action groups with the relevant tag in this project.')
-      warning.addOption('Add group')
-      warning.addOption('Add group and show task in project')
-      warning.addOption('OK')
-      const alertIndex = await warning.show()
-      if (alertIndex === 0) await addActionGroup()
-      if (alertIndex === 1) {
-        await addActionGroup()
-        lib.goTo(tasks[0])
+      const form = new Form()
+      const actions = ['Add group', 'Add to root of project']
+      form.addField(new Form.Field.Option('action', 'Action', actions, actions, actions[0]))
+      form.addField(new Form.Field.Checkbox('goTo', 'Show in project after moving', false))
+      await form.show('There are no action groups with the relevant tag in this project.\n What would you like to do?', 'OK')
+
+      switch (form.values.action) {
+        case 'Add group':
+          await addActionGroup()
+          break
+        case 'Add to root of project':
+          await promptAndMove(tasks, proj)
+          break
       }
+
+      if (form.values.goTo) goTo(tasks[0])
     }
   })
 
