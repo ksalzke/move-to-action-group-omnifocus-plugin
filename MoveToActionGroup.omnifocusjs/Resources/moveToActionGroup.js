@@ -185,7 +185,7 @@
       const form = new Form()
       const actions = ['Add group', 'Add to root of project']
       form.addField(new Form.Field.Option('action', 'Action', actions, actions, actions[0]))
-      form.addField(new Form.Field.Checkbox('setPosition', 'Show in project after moving', setPosition))
+      form.addField(new Form.Field.Checkbox('setPosition', 'Set position', setPosition))
       await form.show('There were no action groups found in this project.\n What would you like to do?', 'OK')
 
       setPosition = form.values.setPosition
