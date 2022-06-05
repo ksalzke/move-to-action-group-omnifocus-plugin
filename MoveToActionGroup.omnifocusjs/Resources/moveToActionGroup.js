@@ -136,7 +136,14 @@
     }
 
     // check which action groups exist
-    const groups = proj.flattenedTasks.filter(task => task.tags.includes(tag) && (task.taskStatus === Task.Status.Available || task.taskStatus === Task.Status.Blocked))
+    const actionGroups = proj.flattenedTasks.filter(task => {
+      if (task.tags.includes(tag)) return true
+      if (lib.autoInclude() === 'all' && task.hasChildren) return true
+      if (lib.autoInclude() === 'top' && task.hasChildren && task.parent.project !== null) return true
+      else return false
+    })
+
+    const groups = actionGroups.filter(task => task.taskStatus === Task.Status.Available || task.taskStatus === Task.Status.Blocked)
 
     // if there are relevant action groups show selection form
     const getGroupPath = (task) => {
@@ -166,7 +173,7 @@
       const actions = ['Add group', 'Add to root of project']
       form.addField(new Form.Field.Option('action', 'Action', actions, actions, actions[0]))
       form.addField(new Form.Field.Checkbox('goTo', 'Show in project after moving', goToSetting))
-      await form.show('There are no action groups with the relevant tag in this project.\n What would you like to do?', 'OK')
+      await form.show('There were no action groups found in this project.\n What would you like to do?', 'OK')
 
       goToSetting = form.values.goTo
 

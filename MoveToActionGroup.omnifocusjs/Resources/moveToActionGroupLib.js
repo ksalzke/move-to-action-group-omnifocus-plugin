@@ -40,5 +40,13 @@
     return lib.getPrefTag(prefTag)
   }
 
+  lib.autoInclude = () => {
+    const preferences = lib.loadSyncedPrefs()
+
+    const setting = preferences.readString('autoInclude')
+    if (['none', 'top', 'all'].includes(setting)) return setting
+    else return 'none'
+  }
+
   return lib
 })()
