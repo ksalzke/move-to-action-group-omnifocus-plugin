@@ -20,7 +20,7 @@
           'Insert after',
           ['beginning', ...remainingChildren],
           ['(beginning)', ...remainingChildren.map(child => child.name)],
-          remainingChildren[remainingChildren.length - 1]))
+          remainingChildren[remainingChildren.length - 1] || 'beginning'))
         form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false))
         await form.show('Task Location', 'Move')
         appendAsNote = form.values.appendAsNote
