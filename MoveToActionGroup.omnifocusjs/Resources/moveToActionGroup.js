@@ -42,9 +42,11 @@
     const addActionGroup = async () => {
       const form = new Form()
       form.addField(new Form.Field.String('groupName', 'Group Name'))
+      form.addField(new Form.Field.Checkbox('tagNewGroup', 'Apply action group tag', lib.autoInclude() === 'none'))
       await form.show('Action Group Name', 'Create and Move')
+
       const group = new Task(form.values.groupName, proj.ending)
-      group.addTag(tag)
+      if (form.values.tagNewGroup) group.addTag(tag)
       await promptAndMove(tasks, group)
     }
 
