@@ -1,4 +1,4 @@
-/* global PlugIn Alert Form moveTasks Task save projectsMatching tagsMatching Preferences */
+/* global PlugIn Alert Form moveTasks Task save projectsMatching tagsMatching Preferences deleteObject */
 (() => {
   const preferences = new Preferences()
 
@@ -7,7 +7,8 @@
     const tag = await lib.getPrefTag('actionGroupTag')
 
     const tasks = selection.tasks
-    let goToSetting = false
+    let setPosition = false
+    let appendAsNote = false
 
     // FUNCTION: allow user to select location of child task
     const promptAndMove = async (tasks, group) => {
@@ -20,18 +21,26 @@
           ['beginning', ...remainingChildren],
           ['(beginning)', ...remainingChildren.map(child => child.name)],
           remainingChildren[remainingChildren.length - 1]))
-        form.addField(new Form.Field.Checkbox('goTo', 'Show task in project after moving', goToSetting))
+        form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false))
         await form.show('Task Location', 'Move')
-        goToSetting = form.values.goTo
+        appendAsNote = form.values.appendAsNote
+        if (form.values.appendAsNote) {
+          for (const task of tasks) {
+            form.values.taskLocation.note = form.values.taskLocation.note + '\n- ' + task.name
+            deleteObject(task)
+          }
+        }
         return (form.values.taskLocation === 'beginning') ? group.beginning : form.values.taskLocation.after
       }
-      const location = group.flattenedTasks.length < 1 ? group.ending : await locationForm()
+      const location = setPosition ? await locationForm() : group.ending
       // check if there are tags before moving - if none action group tag will be inherited and needs to be removed
       const hasExistingTags = tasks.map(task => task.tags.length > 0)
-      moveTasks(tasks, location)
-      save()
-      for (let i = 0; i < tasks.length; i++) {
-        if (!hasExistingTags[i]) tasks[i].removeTag(tag)
+      if (!appendAsNote) {
+        moveTasks(tasks, location)
+        save()
+        for (let i = 0; i < tasks.length; i++) {
+          if (!hasExistingTags[i]) tasks[i].removeTag(tag)
+        }
       }
 
       // store last moved task as preference
@@ -161,12 +170,11 @@
       const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group'], [...groups.map(getGroupPath), 'New action group'], groups[0], 'No action group')
       actionGroupSelect.allowsNull = true
       form.addField(actionGroupSelect)
-      form.addField(new Form.Field.Checkbox('goTo', 'Show task in project after moving', goToSetting))
+      form.addField(new Form.Field.Checkbox('setPosition', 'Set position', setPosition))
       await form.show('Select Action Group', 'Move')
-      goToSetting = form.values.goTo
+      setPosition = form.values.setPosition
       if (form.values.actionGroup === 'New action group') await addActionGroup()
       else await promptAndMove(tasks, form.values.actionGroup)
-      if (goToSetting) lib.goTo(tasks[0])
     }
 
     // if there are none show warning
@@ -174,10 +182,10 @@
       const form = new Form()
       const actions = ['Add group', 'Add to root of project']
       form.addField(new Form.Field.Option('action', 'Action', actions, actions, actions[0]))
-      form.addField(new Form.Field.Checkbox('goTo', 'Show in project after moving', goToSetting))
+      form.addField(new Form.Field.Checkbox('setPosition', 'Show in project after moving', setPosition))
       await form.show('There were no action groups found in this project.\n What would you like to do?', 'OK')
 
-      goToSetting = form.values.goTo
+      setPosition = form.values.setPosition
 
       switch (form.values.action) {
         case 'Add group':
@@ -187,8 +195,6 @@
           await promptAndMove(tasks, proj)
           break
       }
-
-      if (goToSetting) lib.goTo(tasks[0])
     }
   })
 
