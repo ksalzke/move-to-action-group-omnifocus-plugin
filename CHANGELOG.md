@@ -1,3 +1,12 @@
+## [3.2.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.2.0...v3.2.1) (2022-06-05)
+
+
+### Bug Fixes
+
+* :lipstick: Fix label for 'no action group' dialogue - 'set position' checkbox was incorrectly labelled 'show in project' ([43a4af7](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/43a4af7907c3b1ac846ebe1c7b7b08bc27b53cad))
+
+
+
 # [3.2.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.1.1...v3.2.0) (2022-06-05)
 
 
