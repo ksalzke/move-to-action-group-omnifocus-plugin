@@ -12,6 +12,10 @@
     {
       "identifier": "goToLastMoved",
       "image": "backward.fill"
+    },
+    {
+      "identifier": "preferences",
+      "image": "gear"
     }
   ],
   "libraries": [

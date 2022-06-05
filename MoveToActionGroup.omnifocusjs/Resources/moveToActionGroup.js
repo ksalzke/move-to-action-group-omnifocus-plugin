@@ -1,10 +1,10 @@
-/* global PlugIn flattenedTags Alert Form moveTasks Task save projectsMatching tagsMatching Preferences */
+/* global PlugIn Alert Form moveTasks Task save projectsMatching tagsMatching Preferences */
 (() => {
   const preferences = new Preferences()
 
   const action = new PlugIn.Action(async selection => {
     const lib = this.libraries[0]
-    const tag = flattenedTags.byName('Action Group')
+    const tag = await lib.getPrefTag('actionGroupTag')
 
     const tasks = selection.tasks
     let goToSetting = false
