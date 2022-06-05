@@ -18,13 +18,16 @@
         form.addField(new Form.Field.Option(
           'taskLocation',
           'Insert after',
-          ['beginning', ...remainingChildren],
-          ['(beginning)', ...remainingChildren.map(child => child.name)],
+          ['beginning', ...remainingChildren, 'new'],
+          ['(beginning)', ...remainingChildren.map(child => child.name), 'New action group'],
           remainingChildren[remainingChildren.length - 1] || 'beginning'))
         form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false))
         await form.show('Task Location', 'Move')
+        if (form.values.taskLocation === 'new') {
+          await addActionGroup(group)
+        }
         appendAsNote = form.values.appendAsNote
-        if (form.values.appendAsNote) {
+        if (appendAsNote) {
           for (const task of tasks) {
             form.values.taskLocation.note = form.values.taskLocation.note + '\n- ' + task.name
             deleteObject(task)
@@ -48,13 +51,13 @@
     }
 
     // FUNCTION: prompt user for the name of a new action group, create and move
-    const addActionGroup = async () => {
+    const addActionGroup = async (location) => {
       const form = new Form()
       form.addField(new Form.Field.String('groupName', 'Group Name'))
       form.addField(new Form.Field.Checkbox('tagNewGroup', 'Apply action group tag', lib.autoInclude() === 'none'))
       await form.show('Action Group Name', 'Create and Move')
 
-      const group = new Task(form.values.groupName, proj.ending)
+      const group = new Task(form.values.groupName, location.ending)
       if (form.values.tagNewGroup) group.addTag(tag)
       await promptAndMove(tasks, group)
     }
@@ -173,7 +176,7 @@
       form.addField(new Form.Field.Checkbox('setPosition', 'Set position', setPosition))
       await form.show('Select Action Group', 'Move')
       setPosition = form.values.setPosition
-      if (form.values.actionGroup === 'New action group') await addActionGroup()
+      if (form.values.actionGroup === 'New action group') await addActionGroup(proj)
       else await promptAndMove(tasks, form.values.actionGroup)
     }
 
@@ -189,7 +192,7 @@
 
       switch (form.values.action) {
         case 'Add group':
-          await addActionGroup()
+          await addActionGroup(proj)
           break
         case 'Add to root of project':
           await promptAndMove(tasks, proj)
