@@ -1,3 +1,17 @@
+# [3.2.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.1.1...v3.2.0) (2022-06-05)
+
+
+### Features
+
+* :sparkles: add 'add new action group' choice to position dialogue ([c9eb03f](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/c9eb03f7318303313dcca973586e9ab101817c97))
+* :sparkles: add preference for designating the tag for action groups ([b66da11](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/b66da11528b9d8bb6785037c07c1b2d22a2fe7b0))
+* :sparkles: Add preference to auto-include top-level or all action groups ([bfedb0f](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/bfedb0fde55a84fd6ac1d3b04e633099e29d25e7))
+* :sparkles: change checkboxes: now 'set position' and 'append as note' ([7a93705](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/7a93705de761023fe210c86028c9efe589744af0))
+* :sparkles: optionally don't apply action group tag ([15618c3](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/15618c37b62bbae503027fd8c3988636068d73cf))
+* :sparkles: select "beginning" by default if there are no tasks within action group ([4b7aa1e](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/4b7aa1e6dd7fefe8effb14449d02ff8a265999cf))
+
+
+
 ## [3.1.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.1.0...v3.1.1) (2022-02-22)
 
 
