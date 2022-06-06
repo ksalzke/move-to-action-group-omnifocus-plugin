@@ -48,5 +48,10 @@
     else return 'none'
   }
 
+  lib.tagPrompt = () => {
+    const preferences = lib.loadSyncedPrefs()
+    return preferences.readBoolean('tagPrompt')
+  }
+
   return lib
 })()
