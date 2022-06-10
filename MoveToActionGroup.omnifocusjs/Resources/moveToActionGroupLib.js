@@ -143,5 +143,46 @@
     } while (form.values.another)
   }
 
+  lib.potentialActionGroups = async (proj) => {
+    console.log('in potentialActionGroups')
+    const tag = await lib.getPrefTag('actionGroupTag')
+    const allActionGroups = proj.flattenedTasks.filter(task => {
+      if (task.tags.includes(tag)) return true
+      if (lib.autoInclude() === 'all' && task.hasChildren) return true
+      if (lib.autoInclude() === 'top' && task.hasChildren && task.parent.project !== null) return true
+      else return false
+    })
+
+    const availableActionGroups = allActionGroups.filter(task => task.taskStatus === Task.Status.Available || task.taskStatus === Task.Status.Blocked)
+
+    return availableActionGroups
+  }
+
+  lib.actionGroupPrompt = async (proj) => {
+    console.log('in actionGroupPrompt')
+
+    const getGroupPath = (task) => {
+      const getPath = (task) => {
+        if (task.parent === task.containingProject.task) return task.name
+        else return `${getPath(task.parent)} > ${task.name}`
+      }
+      return getPath(task)
+    }
+
+    const groups = await lib.potentialActionGroups(proj)
+    console.log('potential action groups: ' + groups)
+
+    const selection = (groups.length) > 0 ? groups[0] : 'Add to root of project'
+
+    console.log('about to create action group prompt form')
+    const form = new Form()
+    const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group', 'Add to root of project'], [...groups.map(getGroupPath), 'New action group', 'Add to root of project'], selection)
+    form.addField(actionGroupSelect)
+    console.log('selection added')
+    form.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
+    console.log('form created')
+    return form
+  }
+
   return lib
 })()

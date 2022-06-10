@@ -68,55 +68,20 @@
     // check that a tag has been assigned to all tasks, if that setting is enabled - and if not show prompt and assign
     if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0)) await lib.addTags(tasks)
 
-    // check which action groups exist
-    const actionGroups = proj.flattenedTasks.filter(task => {
-      if (task.tags.includes(tag)) return true
-      if (lib.autoInclude() === 'all' && task.hasChildren) return true
-      if (lib.autoInclude() === 'top' && task.hasChildren && task.parent.project !== null) return true
-      else return false
-    })
+    // select action group from selected project
+    const actionGroupPrompt = await lib.actionGroupPrompt(proj)
+    const actionGroupForm = await actionGroupPrompt.show('Select Action Group', 'Move')
+    setPosition = actionGroupForm.values.setPosition
 
-    const groups = actionGroups.filter(task => task.taskStatus === Task.Status.Available || task.taskStatus === Task.Status.Blocked)
-
-    // if there are relevant action groups show selection form
-    const getGroupPath = (task) => {
-      const getPath = (task) => {
-        if (task.parent === task.containingProject.task) return task.name
-        else return `${getPath(task.parent)} > ${task.name}`
-      }
-      return getPath(task)
-    }
-
-    if (groups.length > 0) {
-      const form = new Form()
-      const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group'], [...groups.map(getGroupPath), 'New action group'], groups[0], 'No action group')
-      actionGroupSelect.allowsNull = true
-      form.addField(actionGroupSelect)
-      form.addField(new Form.Field.Checkbox('setPosition', 'Set position', setPosition))
-      await form.show('Select Action Group', 'Move')
-      setPosition = form.values.setPosition
-      if (form.values.actionGroup === 'New action group') await addActionGroup(proj)
-      else await promptAndMove(tasks, form.values.actionGroup)
-    }
-
-    // if there are none show warning
-    if (groups.length === 0) {
-      const form = new Form()
-      const actions = ['Add group', 'Add to root of project']
-      form.addField(new Form.Field.Option('action', 'Action', actions, actions, actions[0]))
-      form.addField(new Form.Field.Checkbox('setPosition', 'Set position', setPosition))
-      await form.show('There were no action groups found in this project.\n What would you like to do?', 'OK')
-
-      setPosition = form.values.setPosition
-
-      switch (form.values.action) {
-        case 'Add group':
-          await addActionGroup(proj)
-          break
-        case 'Add to root of project':
-          await promptAndMove(tasks, proj)
-          break
-      }
+    switch (actionGroupForm.values.actionGroup) {
+      case 'New action group':
+        await addActionGroup(proj)
+        break
+      case 'Add to root of project':
+        await promptAndMove(tasks, proj)
+        break
+      default:
+        await promptAndMove(tasks, actionGroupForm.values.actionGroup)
     }
   })
 
