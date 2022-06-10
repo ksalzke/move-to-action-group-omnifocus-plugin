@@ -1,3 +1,15 @@
+# [3.4.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.3.0...v3.4.0) (2022-06-10)
+
+
+### Features
+
+* :lipstick: incorporate 'add another' into tag form (+ some refactoring) ([a413b16](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/a413b16ccd498ea6efe594ad8a1aaecf021ccca6))
+* :sparkles: add ability to move projects, not just tasks ([32e428b](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/32e428b9b51acd2f4edd7159691b48aea194942f))
+* :sparkles: add filter option to the action group form ([5387406](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/538740651d4b696eff3b1307f029585d8f286b51))
+* :sparkles: preselect most recently used project in search form ([f12ccf5](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/f12ccf5d6254525d5423f76823f8e59be6b76467))
+
+
+
 # [3.3.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.2.1...v3.3.0) (2022-06-06)
 
 
