@@ -53,5 +53,74 @@
     return preferences.readBoolean('tagPrompt')
   }
 
+  lib.searchForm = async (matchingFunction) => {
+    const form = new Form()
+
+    // search box
+    form.addField(new Form.Field.String('textInput', 'Search', null))
+
+    // result box
+    const searchResults = []
+    const searchResultIndexes = []
+    const popupMenu = new Form.Field.Option('menuItem', 'Results', searchResultIndexes, searchResults, null)
+    popupMenu.allowsNull = true
+    popupMenu.nullOptionTitle = 'No Results'
+    form.addField(popupMenu)
+
+    let currentValue = ''
+
+    // validation
+    form.validate = function (formObject) {
+      const textValue = formObject.values.textInput
+      if (!textValue) { return false }
+      if (textValue !== currentValue) {
+        currentValue = textValue
+        // remove popup menu
+        if (form.fields.length === 2) {
+          form.removeField(form.fields[1])
+        }
+      }
+
+      if (form.fields.length === 1) {
+        // search using provided string
+        const searchResults = matchingFunction(textValue)
+        const resultIndexes = []
+        const resultTitles = searchResults.map((item, index) => {
+          resultIndexes.push(index)
+          return item.name
+        })
+        // add new popup menu
+        const popupMenu = new Form.Field.Option(
+          'menuItem',
+          'Results',
+          resultIndexes,
+          resultTitles,
+          resultIndexes[0]
+        )
+        form.addField(popupMenu)
+        return false
+      }
+      if (form.fields.length === 2) {
+        const menuValue = formObject.values.menuItem
+        if (menuValue === undefined || String(menuValue) === 'null') { return false }
+        return true
+      }
+    }
+
+    return form
+  }
+
+  lib.projectPrompt = async () => {
+    // show form
+    const projectForm = await lib.searchForm(projectsMatching)
+    const form = await projectForm.show('Select a project', 'Continue')
+
+    // PROCESSING USING THE DATA EXTRACTED FROM THE FORM
+    const textValue = form.values.textInput
+    const menuItemIndex = form.values.menuItem
+    const results = projectsMatching(textValue)
+    return results[menuItemIndex]
+  }
+
   return lib
 })()
