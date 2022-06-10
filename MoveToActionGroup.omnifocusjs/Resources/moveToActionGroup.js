@@ -62,78 +62,8 @@
       await promptAndMove(tasks, group)
     }
 
-    // FUNCTION: show search form - adapted from code shared by Sal Soghoian
-    const searchForm = async (matchingFunction, prompt) => {
-      const form = new Form()
-
-      // search box
-      form.addField(new Form.Field.String('textInput', 'Search', null))
-
-      // result box
-      const searchResults = []
-      const searchResultIndexes = []
-      const popupMenu = new Form.Field.Option('menuItem', 'Results', searchResultIndexes, searchResults, null)
-      popupMenu.allowsNull = true
-      popupMenu.nullOptionTitle = 'No Results'
-      form.addField(popupMenu)
-
-      // validation
-      form.validate = function (formObject) {
-        const textValue = formObject.values.textInput
-        if (!textValue) { return false }
-        if (textValue !== currentValue) {
-          currentValue = textValue
-          // remove popup menu
-          if (form.fields.length === 2) {
-            form.removeField(form.fields[1])
-          }
-        }
-
-        if (form.fields.length === 1) {
-          // search using provided string
-          const searchResults = matchingFunction(textValue)
-          const resultIndexes = []
-          const resultTitles = searchResults.map((item, index) => {
-            resultIndexes.push(index)
-            return item.name
-          })
-          // add new popup menu
-          const popupMenu = new Form.Field.Option(
-            'menuItem',
-            'Results',
-            resultIndexes,
-            resultTitles,
-            resultIndexes[0]
-          )
-          form.addField(popupMenu)
-          return false
-        }
-        if (form.fields.length === 2) {
-          const menuValue = formObject.values.menuItem
-          if (menuValue === undefined || String(menuValue) === 'null') { return false }
-          return true
-        }
-      }
-
-      // show form
-      let currentValue = ''
-      await form.show(prompt, 'Continue')
-
-      // PROCESSING USING THE DATA EXTRACTED FROM THE FORM
-      const textValue = form.values.textInput
-      const menuItemIndex = form.values.menuItem
-      const results = matchingFunction(textValue)
-      return results[menuItemIndex]
-    }
-
-    // get currently assigned project - if none show warning
-    const proj = tasks[0].assignedContainer !== null ? tasks[0].assignedContainer : await searchForm(projectsMatching, 'Select a project')
-    if (proj === null) {
-      const message = tasks.length > 1 ? 'The selected tasks have not been assigned to a project.' : 'The selected task has not been assigned to a project'
-      const warning = new Alert('No Project', message)
-      warning.show()
-      return
-    }
+    // get currently assigned project - if none show prompt
+    const proj = tasks[0].assignedContainer !== null ? tasks[0].assignedContainer : await lib.projectPrompt()
 
     // check that a tag has been assigned to all tasks, if that setting is enabled
     if (lib.tagPrompt()) {
