@@ -14,10 +14,28 @@
     // select action group from selected project
     const actionGroupPrompt = await lib.actionGroupPrompt(proj)
     const actionGroupForm = await actionGroupPrompt.show('Select Action Group', 'OK')
-    const actionGroup = actionGroupForm.values.actionGroup
+     
+    // processing
+    const getGroupPath = (task) => {
+      const getPath = (task) => {
+        if (task.parent === task.containingProject.task) return task.name
+        else return `${getPath(task.parent)} > ${task.name}`
+      }
+      return getPath(task)
+    }
+
+    const groups = await lib.potentialActionGroups(proj)
+    const formOptions = [...groups, 'New action group', 'Add to root of project']
+    const formLabels =  [...groups.map(getGroupPath), 'New action group', 'Add to root of project']
+
+    const textValue = actionGroupForm.values.textInput || ''
+    const menuItemIndex = actionGroupForm.values.menuItem
+    const results = formOptions.filter((item, index) => formLabels[index].toLowerCase().includes(textValue.toLowerCase()))
+    const actionGroup = results[menuItemIndex]
+
     const setPosition = actionGroupForm.values.setPosition
 
-    switch (actionGroupForm.values.actionGroup) {
+    switch (actionGroup) {
       case 'New action group':
         await lib.moveToNewActionGroup(tasks, proj)
         break

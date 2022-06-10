@@ -184,11 +184,12 @@
     const groups = await lib.potentialActionGroups(proj)
     const selection = (groups.length) > 0 ? groups[0] : 'Add to root of project'
 
-    const form = new Form()
-    const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group', 'Add to root of project'], [...groups.map(getGroupPath), 'New action group', 'Add to root of project'], selection)
-    form.addField(actionGroupSelect)
-    form.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
-    return form
+    const formOptions = [...groups, 'New action group', 'Add to root of project']
+    const formLabels =  [...groups.map(getGroupPath), 'New action group', 'Add to root of project']
+    const actionGroupForm = await lib.searchForm(formOptions, formLabels, selection)
+    actionGroupForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
+
+    return actionGroupForm
   }
 
   lib.locationForm = async (group) => {
