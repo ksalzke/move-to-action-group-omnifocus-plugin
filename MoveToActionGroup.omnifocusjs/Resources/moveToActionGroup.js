@@ -3,7 +3,7 @@
   const action = new PlugIn.Action(async selection => {
     const lib = this.libraries[0]
 
-    const tasks = selection.tasks
+    const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)]
 
     // get currently assigned project - if none show prompt
     const proj = tasks[0].assignedContainer !== null ? tasks[0].assignedContainer : await lib.projectPrompt()
@@ -30,10 +30,12 @@
   })
 
   action.validate = selection => {
-    if (selection.tasks.length < 1) return false
+    const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)]
 
-    const project = selection.tasks[0].containingProject || selection.tasks[0].assignedContainer
-    return selection.tasks.every(task => task.containingProject === project || task.assignedContainer === project)
+    if (tasks.length == 0) return false
+
+    const project = tasks[0].containingProject || tasks[0].assignedContainer
+    return tasks.every(task => task.containingProject === project || task.assignedContainer === project)
   }
 
   return action
