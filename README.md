@@ -1,3 +1,5 @@
+
+
 # About
 
 This is an Omni Automation plug-in for OmniFocus that allows tasks to be more easily moved to within action groups.
@@ -5,6 +7,8 @@ This is an Omni Automation plug-in for OmniFocus that allows tasks to be more ea
 _Please note that all scripts on my GitHub account (or shared elsewhere) are works in progress. If you encounter any issues or have any suggestions please let me know--and do please make sure you backup your database before running scripts from the internet!)_
 
 ## Known issues 
+
+**⚠️ Please note that, due to ongoing work, this README has not been updated for the latest version of this plug-in. I'm hoping to do this shortly, but in the meantime please don't hesitate to raise an issue if you need a hand working out what's what.**
 
 Refer to ['issues'](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/issues) for known issues and planned changes/enhancements.
 
