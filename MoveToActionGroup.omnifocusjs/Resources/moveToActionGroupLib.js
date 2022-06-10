@@ -134,6 +134,7 @@
     let form
     do {
       const tagForm = await lib.tagForm()
+      form = await tagForm.show('Select a tag to apply to untagged tasks', 'OK')
       const textValue = form.values.textInput
       const menuItemIndex = form.values.menuItem
       const tag = tagsMatching(textValue)[menuItemIndex]
