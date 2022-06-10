@@ -76,12 +76,12 @@
       if (textValue !== currentValue) {
         currentValue = textValue
         // remove popup menu
-        if (form.fields.length === 2) {
-          form.removeField(form.fields[1])
+        if (form.fields.some(field => field.key === 'menuItem')) {
+          form.removeField(form.fields.find(field => field.key === 'menuItem'))
         }
       }
 
-      if (form.fields.length === 1) {
+      if (!form.fields.some(field => field.key === 'menuItem')) {
         // search using provided string
         const searchResults = matchingFunction(textValue)
         const resultIndexes = []
@@ -97,10 +97,10 @@
           resultTitles,
           resultIndexes[0]
         )
-        form.addField(popupMenu)
+        form.addField(popupMenu, 1)
         return false
       }
-      if (form.fields.length === 2) {
+      else {
         const menuValue = formObject.values.menuItem
         if (menuValue === undefined || String(menuValue) === 'null') { return false }
         return true
@@ -115,11 +115,32 @@
     const projectForm = await lib.searchForm(projectsMatching)
     const form = await projectForm.show('Select a project', 'Continue')
 
-    // PROCESSING USING THE DATA EXTRACTED FROM THE FORM
+    // processing
     const textValue = form.values.textInput
     const menuItemIndex = form.values.menuItem
     const results = projectsMatching(textValue)
     return results[menuItemIndex]
+  }
+
+  lib.tagForm = async () => {
+    const form = await lib.searchForm(tagsMatching)
+    form.addField(new Form.Field.Checkbox('another', 'Add another?', false))
+    return form
+  }
+
+  lib.addTags = async (tasks) => {
+    const untagged = tasks.filter(task => task.tags.length === 0)
+
+    let form
+    do {
+      const tagForm = await lib.tagForm()
+      const textValue = form.values.textInput
+      const menuItemIndex = form.values.menuItem
+      const tag = tagsMatching(textValue)[menuItemIndex]
+
+      untagged.forEach(task => task.addTag(tag))
+      console.log('another? : '+ form.values.another)
+    } while (form.values.another)
   }
 
   return lib

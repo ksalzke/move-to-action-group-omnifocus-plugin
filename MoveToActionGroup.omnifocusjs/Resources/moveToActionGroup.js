@@ -65,21 +65,8 @@
     // get currently assigned project - if none show prompt
     const proj = tasks[0].assignedContainer !== null ? tasks[0].assignedContainer : await lib.projectPrompt()
 
-    // check that a tag has been assigned to all tasks, if that setting is enabled
-    if (lib.tagPrompt()) {
-      const untagged = tasks.filter(task => task.tags.length === 0)
-      if (untagged.length > 0) {
-        const another = new Alert('Add another tag?', '')
-        another.addOption('Yes')
-        another.addOption('No')
-        let index = 0
-        while (index === 0) {
-          const tag = await searchForm(tagsMatching, 'Select a tag to apply to untagged tasks')
-          untagged.forEach(task => task.addTag(tag))
-          index = await another.show()
-        }
-      }
-    }
+    // check that a tag has been assigned to all tasks, if that setting is enabled - and if not show prompt and assign
+    if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0)) await lib.addTags(tasks)
 
     // check which action groups exist
     const actionGroups = proj.flattenedTasks.filter(task => {
