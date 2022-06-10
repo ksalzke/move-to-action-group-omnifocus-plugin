@@ -56,7 +56,7 @@
     return preferences.readBoolean('tagPrompt')
   }
 
-  lib.searchForm = async (allItems, firstSelected) => {
+  lib.searchForm = async (allItems, itemTitles, firstSelected) => {
     const form = new Form()
 
     // search box
@@ -64,7 +64,7 @@
 
     // result box
     const searchResults = allItems
-    const searchResultTitles = allItems.map(item => item.name)
+    const searchResultTitles = itemTitles
     const searchResultIndexes = allItems.map((item, index) => index)
     const firstSelectedIndex = (searchResults.indexOf(firstSelected) === -1) ? null : searchResults.indexOf(firstSelected)
     const popupMenu = new Form.Field.Option('menuItem', 'Results', searchResultIndexes, searchResultTitles, firstSelectedIndex)
@@ -87,11 +87,11 @@
 
       if (!form.fields.some(field => field.key === 'menuItem')) {
         // search using provided string
-        const searchResults = allItems.filter(item => item.name.toLowerCase().includes(textValue.toLowerCase()))
+        const searchResults = allItems.filter((item, index) => itemTitles[index].toLowerCase().includes(textValue.toLowerCase()))
         const resultIndexes = []
         const resultTitles = searchResults.map((item, index) => {
           resultIndexes.push(index)
-          return item.name
+          return itemTitles[allItems.indexOf(item)]
         })
         // add new popup menu
         const popupMenu = new Form.Field.Option(
@@ -119,13 +119,14 @@
     const lastSelectedProject = (syncedPrefs.read('lastSelectedProjectID') === null) ? null : Project.byIdentifier(syncedPrefs.read('lastSelectedProjectID'))
 
     // show form
-    const projectForm = await lib.searchForm(flattenedProjects, lastSelectedProject)
+    const activeProjects = flattenedProjects.filter(project => [Project.Status.Active, Project.Status.OnHold].includes(project.status))
+    const projectForm = await lib.searchForm(activeProjects, activeProjects.map(p => p.name), lastSelectedProject)
     const form = await projectForm.show('Select a project', 'Continue')
 
     // processing
     const textValue = form.values.textInput || ''
     const menuItemIndex = form.values.menuItem
-    const results = flattenedProjects.filter(project => project.name.toLowerCase().includes(textValue.toLowerCase()))
+    const results = activeProjects.filter(project => project.name.toLowerCase().includes(textValue.toLowerCase()))
     const project = results[menuItemIndex]
 
     // save project for next time
@@ -134,7 +135,7 @@
   }
 
   lib.tagForm = async () => {
-    const form = await lib.searchForm(flattenedTags, null)
+    const form = await lib.searchForm(flattenedTags, flattenedTags.map(t => t.name), null)
     form.addField(new Form.Field.Checkbox('another', 'Add another?', false))
     return form
   }
