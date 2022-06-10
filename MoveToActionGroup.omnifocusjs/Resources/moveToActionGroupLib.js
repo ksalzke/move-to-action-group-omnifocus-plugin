@@ -56,16 +56,18 @@
     return preferences.readBoolean('tagPrompt')
   }
 
-  lib.searchForm = async (matchingFunction) => {
+  lib.searchForm = async (allItems, firstSelected) => {
     const form = new Form()
 
     // search box
     form.addField(new Form.Field.String('textInput', 'Search', null))
 
     // result box
-    const searchResults = []
-    const searchResultIndexes = []
-    const popupMenu = new Form.Field.Option('menuItem', 'Results', searchResultIndexes, searchResults, null)
+    const searchResults = allItems
+    const searchResultTitles = allItems.map(item => item.name)
+    const searchResultIndexes = allItems.map((item, index) => index)
+    const firstSelectedIndex = (searchResults.indexOf(firstSelected) === -1) ? null : searchResults.indexOf(firstSelected)
+    const popupMenu = new Form.Field.Option('menuItem', 'Results', searchResultIndexes, searchResultTitles, firstSelectedIndex)
     popupMenu.allowsNull = true
     popupMenu.nullOptionTitle = 'No Results'
     form.addField(popupMenu)
@@ -74,8 +76,7 @@
 
     // validation
     form.validate = function (formObject) {
-      const textValue = formObject.values.textInput
-      if (!textValue) { return false }
+      const textValue = formObject.values.textInput || ''
       if (textValue !== currentValue) {
         currentValue = textValue
         // remove popup menu
@@ -86,7 +87,7 @@
 
       if (!form.fields.some(field => field.key === 'menuItem')) {
         // search using provided string
-        const searchResults = matchingFunction(textValue)
+        const searchResults = allItems.filter(item => item.name.toLowerCase().includes(textValue.toLowerCase()))
         const resultIndexes = []
         const resultTitles = searchResults.map((item, index) => {
           resultIndexes.push(index)
@@ -114,19 +115,26 @@
   }
 
   lib.projectPrompt = async () => {
+    const syncedPrefs = lib.loadSyncedPrefs()
+    const lastSelectedProject = (syncedPrefs.read('lastSelectedProjectID') === null) ? null : Project.byIdentifier(syncedPrefs.read('lastSelectedProjectID'))
+
     // show form
-    const projectForm = await lib.searchForm(projectsMatching)
+    const projectForm = await lib.searchForm(flattenedProjects, lastSelectedProject)
     const form = await projectForm.show('Select a project', 'Continue')
 
     // processing
-    const textValue = form.values.textInput
+    const textValue = form.values.textInput || ''
     const menuItemIndex = form.values.menuItem
-    const results = projectsMatching(textValue)
-    return results[menuItemIndex]
+    const results = flattenedProjects.filter(project => project.name.toLowerCase().includes(textValue.toLowerCase()))
+    const project = results[menuItemIndex]
+
+    // save project for next time
+    syncedPrefs.write('lastSelectedProjectID', project.id.primaryKey)
+    return project
   }
 
   lib.tagForm = async () => {
-    const form = await lib.searchForm(tagsMatching)
+    const form = await lib.searchForm(flattenedTags, null)
     form.addField(new Form.Field.Checkbox('another', 'Add another?', false))
     return form
   }
@@ -136,11 +144,15 @@
 
     let form
     do {
+      // show form
       const tagForm = await lib.tagForm()
       form = await tagForm.show('Select a tag to apply to untagged tasks', 'OK')
-      const textValue = form.values.textInput
+
+      // processing
+      const textValue = form.values.textInput || ''
       const menuItemIndex = form.values.menuItem
-      const tag = tagsMatching(textValue)[menuItemIndex]
+      const results = flattenedTags.filter(tag => tag.name.toLowerCase().includes(textValue.toLowerCase()))
+      const tag = results[menuItemIndex]
 
       untagged.forEach(task => task.addTag(tag))
     } while (form.values.another)
@@ -195,10 +207,7 @@
   lib.selectLocation = async (tasks, group) => {
     const form = await lib.locationForm(group)
     await form.show('Task Location', 'Move')
-    if (form.values.taskLocation === 'new') {
-      console.log('new selected')
-      await lib.moveToNewActionGroup(tasks, group)
-    }
+    if (form.values.taskLocation === 'new') await lib.moveToNewActionGroup(tasks, group)
     appendAsNote = form.values.appendAsNote
     if (appendAsNote) {
       for (const task of tasks) {
