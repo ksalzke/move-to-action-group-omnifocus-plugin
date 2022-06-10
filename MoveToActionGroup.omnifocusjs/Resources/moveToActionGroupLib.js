@@ -1,5 +1,8 @@
 /* global PlugIn Version Device Alert Tag */
 (() => {
+
+  const preferences = new Preferences()
+
   const lib = new PlugIn.Library(new Version('1.0'))
 
   lib.goTo = async (task) => {
@@ -140,12 +143,10 @@
       const tag = tagsMatching(textValue)[menuItemIndex]
 
       untagged.forEach(task => task.addTag(tag))
-      console.log('another? : '+ form.values.another)
     } while (form.values.another)
   }
 
   lib.potentialActionGroups = async (proj) => {
-    console.log('in potentialActionGroups')
     const tag = await lib.getPrefTag('actionGroupTag')
     const allActionGroups = proj.flattenedTasks.filter(task => {
       if (task.tags.includes(tag)) return true
@@ -160,8 +161,6 @@
   }
 
   lib.actionGroupPrompt = async (proj) => {
-    console.log('in actionGroupPrompt')
-
     const getGroupPath = (task) => {
       const getPath = (task) => {
         if (task.parent === task.containingProject.task) return task.name
@@ -169,20 +168,73 @@
       }
       return getPath(task)
     }
-
     const groups = await lib.potentialActionGroups(proj)
-    console.log('potential action groups: ' + groups)
-
     const selection = (groups.length) > 0 ? groups[0] : 'Add to root of project'
 
-    console.log('about to create action group prompt form')
     const form = new Form()
     const actionGroupSelect = new Form.Field.Option('actionGroup', 'Action Group', [...groups, 'New action group', 'Add to root of project'], [...groups.map(getGroupPath), 'New action group', 'Add to root of project'], selection)
     form.addField(actionGroupSelect)
-    console.log('selection added')
     form.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
-    console.log('form created')
     return form
+  }
+
+  lib.locationForm = async (group) => {
+    const form = new Form()
+    const remainingChildren = group.children.filter(child => child.taskStatus === Task.Status.Available || child.taskStatus === Task.Status.Blocked)
+    form.addField(new Form.Field.Option(
+      'taskLocation',
+      'Insert after',
+      ['beginning', ...remainingChildren, 'new'],
+      ['(beginning)', ...remainingChildren.map(child => child.name), 'New action group'],
+      remainingChildren[remainingChildren.length - 1] || 'beginning'))
+    form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false))
+
+    return form
+  }
+
+  lib.selectLocation = async (tasks, group) => {
+    const form = await lib.locationForm(group)
+    await form.show('Task Location', 'Move')
+    if (form.values.taskLocation === 'new') {
+      console.log('new selected')
+      await lib.moveToNewActionGroup(tasks, group)
+    }
+    appendAsNote = form.values.appendAsNote
+    if (appendAsNote) {
+      for (const task of tasks) {
+        form.values.taskLocation.note = form.values.taskLocation.note + '\n- ' + task.name
+        deleteObject(task)
+      }
+    }
+    return (form.values.taskLocation === 'beginning') ? group.beginning : form.values.taskLocation.after
+  }
+
+  lib.moveToNewActionGroup = async (tasks, location) => {
+    const tag = await lib.getPrefTag('actionGroupTag')
+
+    const form = new Form()
+    form.addField(new Form.Field.String('groupName', 'Group Name'))
+    form.addField(new Form.Field.Checkbox('tagNewGroup', 'Apply action group tag', lib.autoInclude() === 'none'))
+    await form.show('Action Group Name', 'Create and Move')
+
+    const newGroup = new Task(form.values.groupName, location)
+    if (form.values.tagNewGroup) newGroup.addTag(tag)
+    lib.moveTasks(tasks, newGroup, false)
+  }
+
+  lib.moveTasks = async (tasks, location, setPosition) => {
+    const loc = setPosition ? await lib.selectLocation(tasks, location) : location.ending
+
+    // check if there are tags before moving - if none action group tag will be inherited and needs to be removed
+    const hasExistingTags = tasks.map(task => task.tags.length > 0)
+    moveTasks(tasks, loc)
+    save()
+    for (let i = 0; i < tasks.length; i++) {
+      if (!hasExistingTags[i]) tasks[i].removeTag(tag)
+    }
+
+    // store last moved task as preference
+    preferences.write('lastMovedID', tasks[0].id.primaryKey)
   }
 
   return lib
