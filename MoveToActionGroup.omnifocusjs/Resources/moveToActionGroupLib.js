@@ -225,10 +225,12 @@
 
     const form = new Form()
     form.addField(new Form.Field.String('groupName', 'Group Name'))
+    form.addField(new Form.Field.Checkbox('completeWithLast', 'Complete with last action', settings.boolForKey('OFMCompleteWhenLastItemComplete')))
     form.addField(new Form.Field.Checkbox('tagNewGroup', 'Apply action group tag', lib.autoInclude() === 'none'))
     await form.show('Action Group Name', 'Create and Move')
 
     const newGroup = new Task(form.values.groupName, location)
+    newGroup.completedByChildren = form.values.completeWithLast
     if (form.values.tagNewGroup) newGroup.addTag(tag)
     lib.moveTasks(tasks, newGroup, false)
   }
