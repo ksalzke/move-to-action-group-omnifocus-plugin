@@ -56,6 +56,12 @@
     return preferences.readBoolean('tagPrompt')
   }
 
+  lib.promptForProject = () => {
+    const preferences = lib.loadSyncedPrefs()
+    if (preferences.read('projectPrompt') !== null) return preferences.read('projectPrompt')
+    else return true
+  }
+
   lib.searchForm = async (allItems, itemTitles, firstSelected, matchingFunction) => {
     const form = new Form()
 
@@ -161,7 +167,11 @@
 
   lib.potentialActionGroups = async (proj) => {
     const tag = await lib.getPrefTag('actionGroupTag')
-    const allActionGroups = proj.flattenedTasks.filter(task => {
+
+    const allTasks = (proj === null) ? flattenedTasks : proj.flattenedTasks
+
+    const allActionGroups = allTasks.filter(task => {
+      if (task.project !== null) return false
       if (task.tags.includes(tag)) return true
       if (lib.autoInclude() === 'all' && task.hasChildren) return true
       if (lib.autoInclude() === 'top' && task.hasChildren && task.parent.project !== null) return true
@@ -176,17 +186,19 @@
   lib.actionGroupPrompt = async (tasks, proj) => {
     const getGroupPath = (task) => {
       const getPath = (task) => {
-        if (task.parent === task.containingProject.task) return task.name
+        if (task.parent === task.containingProject.task && proj === null) return `${task.containingProject.name} > ${task.name}`
+        else if (task.parent === task.containingProject.task) return task.name
         else return `${getPath(task.parent)} > ${task.name}`
       }
       return getPath(task)
     }
     const groups = await lib.potentialActionGroups(proj)
-    const selection = (groups.length) > 0 ? groups[0] : 'Add to root of project'
 
-    const formOptions = [...groups, 'New action group', 'Add to root of project']
-    const formLabels =  [...groups.map(getGroupPath), 'New action group', 'Add to root of project']
-    const searchForm = await lib.searchForm(formOptions, formLabels, selection, null)
+    const additionalOptions = lib.promptForProject() ? ['Add to root of project', 'New action group'] : []
+
+    const formOptions = [...groups, ...additionalOptions]
+    const formLabels =  [...groups.map(getGroupPath), ...additionalOptions]
+    const searchForm = await lib.searchForm(formOptions, formLabels, formOptions[0], null)
     searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
 
     const actionGroupForm = await searchForm.show('Select Action Group', 'OK')
