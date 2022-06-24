@@ -33,11 +33,11 @@ This action can be run when one or more tasks are selected. The selected tasks m
 
 The action then completes the following:
 
-1. The user is prompted to select a project.
+1. The user is prompted to select a project. (If 'Prompt for Project' is deselected in the Preferences, this prompt is not shown.)
 
-2. If no tags have been assigned, the user is prompted to select a tag, or tags, to be applied to the selected tasks. (If 'Prompt for Tags' is deselected in the Preferences, this prompt is not shown.)
+2. If no tags have been assigned and the user has selected 'Prompt for Tags' in the Preferences, the user is prompted to select a tag, or tags, to be applied to the selected tasks.
 
-3. The user is prompted to select an action group to move the task(s) to, if appropriate action groups (determined by the preferences) exist in the selected project. Alternatively, a new action group can be created (with a prompt for the user to enter the name) or the task(s) can be moved to the root of the previously selected project.
+3. The user is prompted to select an action group to move the task(s) to, if appropriate action groups (determined by the preferences) exist (either in the selected project, or in the entire database if the 'Prompt for Project' preference is not active). Alternatively, a new action group can be created (with a prompt for the user to enter the name) or the task(s) can be moved to the root of the previously selected project.
 Optionally, the user can select the checkbox to select the position of the task(s) in the next step.
 
 4. Based on the previous selection, the user may be prompted to select where in the group the selected task(s) should be moved. By default, tasks are added to the end of the action group. There is also the option to navigate to the task after it is moved. The user may also opt to add the project to the note of the task that's selected, rather than as a subtask. This may be useful in conjunction with my [Note To Subtasks](https://github.com/ksalzke/notes-to-subtasks-omnifocus-plugin) plug-in.
@@ -55,6 +55,7 @@ The following preferences are available:
 * **Action Group Tag**. This is a tag that can optionally be used to denote action groups. It can be used to restrict the action groups that show in the options to a predefined subset.
 * **Automatically Include Action Groups**. This setting can be set to 'None' (only action group tagged with the Action Group Tag, set above, are included as options), 'Top-Level' (all top-level action groups are included as options), or 'All' (all action groups included).
 * **Prompt for Tags**. If this is selected and none of the selected tasks have tags, the user will be prompted to add one or more tags to them prior to selecting an action group to move them to.
+* **Prompt for Project**. If this is selected, the user will be prompted for a project prior to the action group prompt. If unselected, all action groups across the database will be shown. Note that _not_ prompting for the project will result in slower performance.
 
 
 # Functions
@@ -84,7 +85,11 @@ Returns the current setting for the 'Automatically Include Action Groups' prefer
 
 ## `tagPrompt () : Boolean`
 
-Returns the current setting for the 'Prompt For Tags' preference.
+Returns the current setting for the 'Prompt For Tags' preference. If no preference is set, returns false.
+
+## `promptForProject () : Boolean`
+
+Returns the current setting for the 'Prompt For Projects' preference. If no preference is set, returns true.
 
 ## `searchForm (allItems: Array<T>, itemTitles: Array<String>, firstSelected: T, matchingFunction: function | null) : Form` (asynchronous)
 
@@ -108,9 +113,9 @@ Returns a form for the user to select a tag, using the `searchForm` and an addit
 
 Shows a `tagForm` prompt for the user to add a tag, repeatedly while the 'Add another?' checkbox is selected.
 
-## `potentialActionGroups (proj: Project) : Array<Task>` (asynchronous)
+## `potentialActionGroups (proj: Project | null) : Array<Task>` (asynchronous)
 
-Returns an array of action groups within the given project. The action groups that are returned depends on the setting chosen in Preferences.
+Returns an array of action groups within the given project. The action groups that are returned depends on the setting chosen in Preferences. If null is passed as a parameter, all action groups within the database are checked. 
 
 ## `actionGroupPrompt (tasks: Array<Task>, proj: Project)` (asynchronous)
 
