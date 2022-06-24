@@ -2,7 +2,7 @@
 (() => {
   const action = new PlugIn.Action(async selection => {
     const lib = this.libraries[0]
-
+    
     const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)]
 
     // get currently assigned project - if none show prompt
@@ -30,7 +30,7 @@
 
     const textValue = actionGroupForm.values.textInput || ''
     const menuItemIndex = actionGroupForm.values.menuItem
-    const results = formOptions.filter((item, index) => formLabels[index].toLowerCase().includes(textValue.toLowerCase()))
+    const results =  (textValue !== '') ? formOptions.filter((item, index) => formLabels[index].toLowerCase().includes(textValue.toLowerCase())) : formOptions
     const actionGroup = results[menuItemIndex]
 
     const setPosition = actionGroupForm.values.setPosition

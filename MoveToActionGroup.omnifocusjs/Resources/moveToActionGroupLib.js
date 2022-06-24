@@ -56,7 +56,7 @@
     return preferences.readBoolean('tagPrompt')
   }
 
-  lib.searchForm = async (allItems, itemTitles, firstSelected) => {
+  lib.searchForm = async (allItems, itemTitles, firstSelected, matchingFunction) => {
     const form = new Form()
 
     // search box
@@ -87,7 +87,7 @@
 
       if (!form.fields.some(field => field.key === 'menuItem')) {
         // search using provided string
-        const searchResults = allItems.filter((item, index) => itemTitles[index].toLowerCase().includes(textValue.toLowerCase()))
+        const searchResults = (matchingFunction === null) ? allItems.filter((item, index) => itemTitles[index].toLowerCase().includes(textValue.toLowerCase())) : (textValue !== '') ? matchingFunction(textValue) : allItems
         const resultIndexes = []
         const resultTitles = searchResults.map((item, index) => {
           resultIndexes.push(index)
@@ -120,13 +120,13 @@
 
     // show form
     const activeProjects = flattenedProjects.filter(project => [Project.Status.Active, Project.Status.OnHold].includes(project.status))
-    const projectForm = await lib.searchForm(activeProjects, activeProjects.map(p => p.name), lastSelectedProject)
+    const projectForm = await lib.searchForm(activeProjects, activeProjects.map(p => p.name), lastSelectedProject, projectsMatching)
     const form = await projectForm.show('Select a project', 'Continue')
 
     // processing
     const textValue = form.values.textInput || ''
     const menuItemIndex = form.values.menuItem
-    const results = activeProjects.filter(project => project.name.toLowerCase().includes(textValue.toLowerCase()))
+    const results = (textValue !== '') ? projectsMatching(textValue) : activeProjects
     const project = results[menuItemIndex]
 
     // save project for next time
@@ -135,7 +135,7 @@
   }
 
   lib.tagForm = async () => {
-    const form = await lib.searchForm(flattenedTags, flattenedTags.map(t => t.name), null)
+    const form = await lib.searchForm(flattenedTags, flattenedTags.map(t => t.name), null, tagsMatching)
     form.addField(new Form.Field.Checkbox('another', 'Add another?', false))
     return form
   }
@@ -152,7 +152,7 @@
       // processing
       const textValue = form.values.textInput || ''
       const menuItemIndex = form.values.menuItem
-      const results = flattenedTags.filter(tag => tag.name.toLowerCase().includes(textValue.toLowerCase()))
+      const results = (textValue !== '') ? tagsMatching(textValue) : flattenedTags
       const tag = results[menuItemIndex]
 
       untagged.forEach(task => task.addTag(tag))
@@ -186,7 +186,7 @@
 
     const formOptions = [...groups, 'New action group', 'Add to root of project']
     const formLabels =  [...groups.map(getGroupPath), 'New action group', 'Add to root of project']
-    const actionGroupForm = await lib.searchForm(formOptions, formLabels, selection)
+    const actionGroupForm = await lib.searchForm(formOptions, formLabels, selection, null)
     actionGroupForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
 
     return actionGroupForm
