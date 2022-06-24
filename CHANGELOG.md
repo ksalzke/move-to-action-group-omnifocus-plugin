@@ -1,3 +1,18 @@
+# [3.5.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.4.0...v3.5.0) (2022-06-24)
+
+
+### Bug Fixes
+
+* :bug: re-introduce fuzzy matching for projects and tags ([eb7dbab](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/eb7dbab02386d83c0fdfc53a2a0caeeab873040c))
+
+
+### Features
+
+* :sparkles: add 'complete with last action' checkbox when creating new group ([e9f271d](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/e9f271debf124400cffac128ebc1e956ff2e7df8))
+* :sparkles: add 'Prompt for Project' preference ([0578308](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/05783083da4eac6dd7ae9d5111e41c4f3fd2a637))
+
+
+
 # [3.4.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.3.0...v3.4.0) (2022-06-10)
 
 
