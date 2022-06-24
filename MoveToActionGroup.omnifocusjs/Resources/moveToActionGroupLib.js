@@ -173,7 +173,7 @@
     return availableActionGroups
   }
 
-  lib.actionGroupPrompt = async (proj) => {
+  lib.actionGroupPrompt = async (tasks, proj) => {
     const getGroupPath = (task) => {
       const getPath = (task) => {
         if (task.parent === task.containingProject.task) return task.name
@@ -186,10 +186,31 @@
 
     const formOptions = [...groups, 'New action group', 'Add to root of project']
     const formLabels =  [...groups.map(getGroupPath), 'New action group', 'Add to root of project']
-    const actionGroupForm = await lib.searchForm(formOptions, formLabels, selection, null)
-    actionGroupForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
+    const searchForm = await lib.searchForm(formOptions, formLabels, selection, null)
+    searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false))
 
-    return actionGroupForm
+    const actionGroupForm = await searchForm.show('Select Action Group', 'OK')
+    
+    // processing
+    const textValue = actionGroupForm.values.textInput || ''
+    const menuItemIndex = actionGroupForm.values.menuItem
+    const results =  (textValue !== '') ? formOptions.filter((item, index) => formLabels[index].toLowerCase().includes(textValue.toLowerCase())) : formOptions
+    const actionGroup = results[menuItemIndex]
+
+    const setPosition = actionGroupForm.values.setPosition
+ 
+    switch (actionGroup) {
+      case 'New action group':
+        await lib.moveToNewActionGroup(tasks, proj)
+        break
+      case 'Add to root of project':
+        lib.moveTasks(tasks, proj, setPosition)
+        break
+       default:
+        lib.moveTasks(tasks, actionGroup, setPosition)
+     }
+
+    return
   }
 
   lib.locationForm = async (group) => {
