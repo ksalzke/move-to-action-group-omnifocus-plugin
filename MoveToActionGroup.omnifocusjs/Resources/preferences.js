@@ -14,7 +14,7 @@
     const form = new Form()
     const tagNames = flattenedTags.map(t => t.name)
     form.addField(new Form.Field.Option('actionGroupTag', 'Action Group Tag', flattenedTags, tagNames, actionGroupTag, null))
-    form.addField(new Form.Field.Option('autoInclude', 'Automatically Include Action Groups', ['none', 'top', 'all'], ['None', 'Top-Level', 'All'], autoInclude))
+    form.addField(new Form.Field.Option('autoInclude', 'Automatically Include Action Groups', ['none', 'top', 'all', 'all tasks'], ['None', 'Top-Level', 'All Action Groups', 'All Tasks'], autoInclude))
     form.addField(new Form.Field.Checkbox('tagPrompt', 'Prompt for Tags', tagPrompt))
     form.addField(new Form.Field.Checkbox('projectPrompt', 'Prompt for Projects', projectPrompt))
     await form.show('Preferences: Move To Action Group', 'OK')

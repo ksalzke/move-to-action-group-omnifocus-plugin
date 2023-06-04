@@ -47,7 +47,7 @@
     const preferences = lib.loadSyncedPrefs()
 
     const setting = preferences.readString('autoInclude')
-    if (['none', 'top', 'all'].includes(setting)) return setting
+    if (['none', 'top', 'all', 'all tasks'].includes(setting)) return setting
     else return 'none'
   }
 
@@ -173,6 +173,7 @@
     const allActionGroups = allTasks.filter(task => {
       if (task.project !== null) return false
       if (task.tags.includes(tag)) return true
+      if (lib.autoInclude() === 'all tasks') return true
       if (lib.autoInclude() === 'all' && task.hasChildren) return true
       if (lib.autoInclude() === 'top' && task.hasChildren && task.parent.project !== null) return true
       else return false
