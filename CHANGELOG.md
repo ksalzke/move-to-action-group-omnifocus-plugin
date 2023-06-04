@@ -1,3 +1,12 @@
+# [3.6.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.5.0...v3.6.0) (2023-06-04)
+
+
+### Features
+
+* :sparkles: Add option for all tasks to be included as potential action groups (whether or not they already have subtasks) ([af656fd](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/af656fdc57d7408f9a48257787b84af63b5a7646))
+
+
+
 # [3.5.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.4.0...v3.5.0) (2022-06-24)
 
 
