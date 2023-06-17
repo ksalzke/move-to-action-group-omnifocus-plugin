@@ -1,3 +1,17 @@
+# [3.7.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.6.0...v3.7.0) (2023-06-17)
+
+
+### Bug Fixes
+
+* :bug: fix bug where action group tag not being removed ([db88e7a](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/db88e7a813d525a8ab417670b8d56d47f9368a21))
+
+
+### Features
+
+* :sparkles: add preference to not inherit tags when moved ([f377ece](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/f377eceba236e0373e05eb24470ac5f3d489e611))
+
+
+
 # [3.6.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.5.0...v3.6.0) (2023-06-04)
 
 
