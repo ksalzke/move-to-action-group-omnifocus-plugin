@@ -62,6 +62,12 @@
     else return true
   }
 
+  lib.inheritTags = () => {
+    const preferences = lib.loadSyncedPrefs()
+    if (preferences.read('inheritTags') !== null) return preferences.read('inheritTags')
+    else return true
+  }
+
   lib.searchForm = async (allItems, itemTitles, firstSelected, matchingFunction) => {
     const form = new Form()
 
@@ -256,6 +262,7 @@
 
   lib.moveToNewActionGroup = async (tasks, location) => {
     const tag = await lib.getPrefTag('actionGroupTag')
+    const inheritTags = lib.inheritTags()
 
     const form = new Form()
     form.addField(new Form.Field.String('groupName', 'Group Name'))
@@ -272,12 +279,14 @@
   lib.moveTasks = async (tasks, location, setPosition) => {
     const loc = setPosition ? await lib.selectLocation(tasks, location) : location.ending
     const tag = await lib.getPrefTag('actionGroupTag')
+    const inheritTags = lib.inheritTags()
 
     const hasExistingTags = tasks.map(task => task.tags.length > 0)
     moveTasks(tasks, loc)
     save()
     for (let i = 0; i < tasks.length; i++) {
       if (!hasExistingTags[i]) tasks[i].removeTag(tag)
+      if (!hasExistingTags[i] && !inheritTags) tasks[i].clearTags()
     }
 
     // store last moved task as preference
