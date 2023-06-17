@@ -271,8 +271,8 @@
 
   lib.moveTasks = async (tasks, location, setPosition) => {
     const loc = setPosition ? await lib.selectLocation(tasks, location) : location.ending
+    const tag = await lib.getPrefTag('actionGroupTag')
 
-    // check if there are tags before moving - if none action group tag will be inherited and needs to be removed
     const hasExistingTags = tasks.map(task => task.tags.length > 0)
     moveTasks(tasks, loc)
     save()
