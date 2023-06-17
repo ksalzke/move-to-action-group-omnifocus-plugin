@@ -185,7 +185,7 @@
       else return false
     })
 
-    const availableActionGroups = allActionGroups.filter(task => task.taskStatus === Task.Status.Available || task.taskStatus === Task.Status.Blocked)
+    const availableActionGroups = allActionGroups.filter(task => ![Task.Status.Completed, Task.Status.Dropped].includes(task.taskStatus))
 
     return availableActionGroups
   }
