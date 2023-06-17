@@ -56,7 +56,7 @@ The following preferences are available:
 * **Automatically Include Action Groups**. This setting can be set to 'None' (only action group tagged with the Action Group Tag, set above, are included as options), 'Top-Level' (all top-level action groups are included as options), or 'All' (all action groups included).
 * **Prompt for Tags**. If this is selected and none of the selected tasks have tags, the user will be prompted to add one or more tags to them prior to selecting an action group to move them to.
 * **Prompt for Project**. If this is selected, the user will be prompted for a project prior to the action group prompt. If unselected, all action groups across the database will be shown. Note that _not_ prompting for the project will result in slower performance.
-
+* **Inherit Tags** If selected, the plug-in will follow default OmniFocus behaviour when a task with no tags is moved into an action group that itself has tags i.e. the tags will be inherited. If unselected, tags will not be inherited automatically.
 
 # Functions
 
