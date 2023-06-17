@@ -1,3 +1,12 @@
+## [3.7.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.7.0...v3.7.1) (2023-06-17)
+
+
+### Bug Fixes
+
+* :bug: fix bug where not all action groups are shown when 'all' is selected ([7082a6d](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/7082a6d2510ba3099af695ac1ef734eff61b5e75))
+
+
+
 # [3.7.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.6.0...v3.7.0) (2023-06-17)
 
 
