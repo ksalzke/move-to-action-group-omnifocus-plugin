@@ -19,13 +19,13 @@ interface SyncedPrefLib extends PlugIn.Library {
 interface ActionGroupLib extends PlugIn.Library {
   goTo?: (task: Task) => Promise<void>
   loadSyncedPrefs?: () => SyncedPref
+  getFuzzySearchLib?: () => FuzzySearchLibrary
   prefTag?: (prefTag: string) => Tag | null
   getPrefTag?: (prefTag: string) => Promise<Tag>
   autoInclude?: () => 'none' | 'top' | 'all' | 'all tasks'
   tagPrompt?: () => boolean
   promptForProject?: () => boolean
   inheritTags?: () => boolean
-  searchForm?: (allItems: any[], itemTitles: string[], firstSelected: any, matchingFunction: (textValue: string) => any[]) => Promise<Form>
   projectPrompt?: () => Promise<Project>
   tagForm?: () => Promise<TagForm>
   addTags?: (tasks: Task[]) => Promise<void>
@@ -35,6 +35,21 @@ interface ActionGroupLib extends PlugIn.Library {
   selectLocation?: (tasks: Task[], group: Task | Project) => Promise<Task | Task.ChildInsertionLocation>
   moveToNewActionGroup?: (tasks: Task[], location: Project | Task | Task.ChildInsertionLocation) => Promise<void>
   moveTasks?: (tasks: Task[], location: Project | Task, setPosition: boolean) => Promise<void>
+}
+
+interface FuzzySearchLibrary extends PlugIn.Library {
+  getTaskPath?: (task: Task) => string
+  searchForm?: (allItems: any, itemTitles: string[], firstSelected: any, matchingFunction: Function | null) => FuzzySearchForm
+  allTasksFuzzySearchForm?: () => FuzzySearchForm
+  remainingTasksFuzzySearchForm?: () => FuzzySearchForm
+  activeTagsFuzzySearchForm?: () => FuzzySearchForm
+}
+
+interface FuzzySearchForm extends Form {
+  values: {
+    textInput?: string
+    menuItem?: any
+  }
 }
 
 interface ProjectForm extends Form {
@@ -104,7 +119,19 @@ interface MoveForm extends Form {
     }
   }
 
-  lib.prefTag = prefTag => {
+  lib.getFuzzySearchLib = (): FuzzySearchLibrary => {
+    const fuzzySearchPlugIn = PlugIn.find('com.KaitlinSalzke.fuzzySearchLib', null)
+    if (!fuzzySearchPlugIn) {
+      const alert = new Alert(
+        'Fuzzy Search Library Required',
+        'For the Follow-Up Task plug-in to work correctly, the \'Fuzzy Search\' plug-in (https://github.com/ksalzke/fuzzy-search-library) is also required and needs to be added to the plug-in folder separately. Either you do not currently have this plugin installed, or it is not installed correctly.'
+      )
+      alert.show(null)
+    }
+    return fuzzySearchPlugIn.library('fuzzySearchLib')
+  }
+
+  lib.prefTag = (prefTag: string): Tag | null => {
     const preferences = lib.loadSyncedPrefs()
     const tagID = preferences.readString(`${prefTag}ID`)
 
@@ -147,79 +174,17 @@ interface MoveForm extends Form {
     else return true
   }
 
-  lib.searchForm = async (allItems, itemTitles, firstSelected, matchingFunction) => {
-    const form = new Form()
-
-    // search box
-    form.addField(new Form.Field.String('textInput', 'Search', null, null), null)
-
-    // result box
-    const searchResults = allItems
-    const searchResultTitles = itemTitles
-    const searchResultIndexes = allItems.map((item, index) => index)
-    const firstSelectedIndex = (searchResults.indexOf(firstSelected) === -1) ? null : searchResults.indexOf(firstSelected)
-    const popupMenu = new Form.Field.Option('menuItem', 'Results', searchResultIndexes, searchResultTitles, firstSelectedIndex, null)
-    popupMenu.allowsNull = true
-    popupMenu.nullOptionTitle = 'No Results'
-    form.addField(popupMenu, null)
-
-    let currentValue = ''
-
-    // validation
-    form.validate = function (formObject) {
-      const textValue = formObject.values.textInput || ''
-      if (textValue !== currentValue) {
-        currentValue = textValue
-        // remove popup menu
-        if (form.fields.some(field => field.key === 'menuItem')) {
-          form.removeField(form.fields.find(field => field.key === 'menuItem'))
-        }
-      }
-
-      if (!form.fields.some(field => field.key === 'menuItem')) {
-        // search using provided string
-        const searchResults = (matchingFunction === null) ? allItems.filter((item, index) => itemTitles[index].toLowerCase().includes(textValue.toLowerCase())) : (textValue !== '') ? matchingFunction(textValue) : allItems
-        const resultIndexes = []
-        const resultTitles = searchResults.map((item, index) => {
-          resultIndexes.push(index)
-          return itemTitles[allItems.indexOf(item)]
-        })
-        // add new popup menu
-        const popupMenu = new Form.Field.Option(
-          'menuItem',
-          'Results',
-          resultIndexes,
-          resultTitles,
-          resultIndexes[0],
-          null
-        )
-        form.addField(popupMenu, 1)
-        return false
-      }
-      else {
-        const menuValue = formObject.values.menuItem
-        if (menuValue === undefined || String(menuValue) === 'null') { return false }
-        return true
-      }
-    }
-
-    return form
-  }
-
   lib.projectPrompt = async () => {
     const syncedPrefs = lib.loadSyncedPrefs()
+    const fuzzySearchLib = lib.getFuzzySearchLib()
+
+    const activeProjects = flattenedProjects.filter(project => [Project.Status.Active, Project.Status.OnHold].includes(project.status))
     const lastSelectedProject = (syncedPrefs.read('lastSelectedProjectID') === null) ? null : Project.byIdentifier(syncedPrefs.read('lastSelectedProjectID'))
 
-    // show form
-    const activeProjects = flattenedProjects.filter(project => [Project.Status.Active, Project.Status.OnHold].includes(project.status))
-    const projectForm = await lib.searchForm(activeProjects, activeProjects.map(p => p.name), lastSelectedProject, projectsMatching)
-    const form: ProjectForm = await projectForm.show('Select a project', 'Continue')
+    const projectForm: ProjectForm = fuzzySearchLib.searchForm(activeProjects, activeProjects.map(p => p.name), lastSelectedProject, projectsMatching)
+    projectForm.show('Select a project', 'Continue')
 
-    // processing
-    const textValue = form.values.textInput || ''
-    const menuItemIndex = form.values.menuItem
-    const results = (textValue !== '') ? projectsMatching(textValue) : activeProjects
-    const project = results[menuItemIndex]
+    const project = projectForm.values.menuItem
 
     // save project for next time
     syncedPrefs.write('lastSelectedProjectID', project.id.primaryKey)
@@ -227,7 +192,8 @@ interface MoveForm extends Form {
   }
 
   lib.tagForm = async () => {
-    const form = await lib.searchForm(flattenedTags, flattenedTags.map(t => t.name), null, tagsMatching)
+    const fuzzySearchLib = lib.getFuzzySearchLib()
+    const form = fuzzySearchLib.activeTagsFuzzySearchForm()
     form.addField(new Form.Field.Checkbox('another', 'Add another?', false), null)
     return form
   }
@@ -241,11 +207,7 @@ interface MoveForm extends Form {
       const tagForm = await lib.tagForm()
       form = await tagForm.show('Select a tag to apply to untagged tasks', 'OK')
 
-      // processing
-      const textValue = form.values.textInput || ''
-      const menuItemIndex = form.values.menuItem
-      const results = (textValue !== '') ? tagsMatching(textValue) : flattenedTags
-      const tag = results[menuItemIndex]
+      const tag = tagForm.values.menuItem
 
       untagged.forEach(task => task.addTag(tag))
     } while (form.values.another)
@@ -271,31 +233,19 @@ interface MoveForm extends Form {
   }
 
   lib.actionGroupPrompt = async (tasks, proj) => {
-    const getGroupPath = (task) => {
-      const getPath = (task) => {
-        if (task.parent === task.containingProject.task && proj === null) return `${task.containingProject.name} > ${task.name}`
-        else if (task.parent === task.containingProject.task) return task.name
-        else return `${getPath(task.parent)} > ${task.name}`
-      }
-      return getPath(task)
-    }
+    const fuzzySearchLib = lib.getFuzzySearchLib()
     const groups = await lib.potentialActionGroups(proj)
 
     const additionalOptions = lib.promptForProject() ? ['Add to root of project', 'New action group'] : []
 
     const formOptions = [...groups, ...additionalOptions]
-    const formLabels = [...groups.map(getGroupPath), ...additionalOptions]
-    const searchForm = await lib.searchForm(formOptions, formLabels, formOptions[0], null)
+    const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions]
+    const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, formOptions[0], null)
     searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null)
 
     const actionGroupForm: ActionGroupForm = await searchForm.show('Select Action Group', 'OK')
 
-    // processing
-    const textValue = actionGroupForm.values.textInput || ''
-    const menuItemIndex = actionGroupForm.values.menuItem
-    const results = (textValue !== '') ? formOptions.filter((item, index) => formLabels[index].toLowerCase().includes(textValue.toLowerCase())) : formOptions
-    const actionGroup = results[menuItemIndex]
-
+    const actionGroup = searchForm.values.menuItem
     const setPosition = actionGroupForm.values.setPosition
 
     switch (actionGroup) {

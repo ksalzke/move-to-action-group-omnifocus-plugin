@@ -14,7 +14,7 @@ Refer to ['issues'](https://github.com/ksalzke/move-to-action-group-omnifocus-pl
 
 ## Synced Preferences Plug-In
 
-**Important note: for this plug-in bundle to work correctly, my [Synced Preferences for OmniFocus plug-in](https://github.com/ksalzke/synced-preferences-for-omnifocus) is also required and needs to be added to the plug-in folder separately.**
+**Important note: for this plug-in bundle to work correctly, my [Synced Preferences for OmniFocus plug-in](https://github.com/ksalzke/synced-preferences-for-omnifocus) and [Fuzzy Search Library](https://github.com/ksalzke/fuzzy-search-library) are also required and need to be added to the plug-in folder separately.**
 
 ## Installation
 
@@ -78,7 +78,6 @@ Returns the currently-set tag, if set in preferences. If no tag has been set, re
 
 Returns the currently-set tag ('itemTag' or 'linkedEventTag'), if set in preferences. If no tag has been set, shows the preferences form.
 
-
 ## `autoInclude () : Boolean`
 
 Returns the current setting for the 'Automatically Include Action Groups' preference.
@@ -90,16 +89,6 @@ Returns the current setting for the 'Prompt For Tags' preference. If no preferen
 ## `promptForProject () : Boolean`
 
 Returns the current setting for the 'Prompt For Projects' preference. If no preference is set, returns true.
-
-## `searchForm (allItems: Array<T>, itemTitles: Array<String>, firstSelected: T, matchingFunction: function | null) : Form` (asynchronous)
-
-Returns a form that has two fields.
-
-The first field is an empty text box, which the user can type into to search the second field, which is a dropdown menu comprising `allItems` with titles `itemTitles`. The initial selected item will be `firstSelected`.
-
-The `matchingFunction` should be an OmniFocus matching function such as `tagsMatching` or `projectsMatching`. If this parameter is passed, fuzzy search will be used (but note that the corresponding allItems parameter should be `flattenedProjects` or `flattenedTags`, for example; a subset cannot be used).
-
-If the `matchingFunction` is null, the search will be exact.
 
 ## `projectPrompt () : Project` (asynchronous)
 
