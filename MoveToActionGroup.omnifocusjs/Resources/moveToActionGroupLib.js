@@ -76,13 +76,11 @@
         else
             return false; // TODO: consolidate actions into one 'get preference' action
     };
-    lib.projectPrompt = async () => {
+    lib.projectPrompt = async (defaultSelection) => {
         const syncedPrefs = lib.loadSyncedPrefs();
         const fuzzySearchLib = lib.getFuzzySearchLib();
         const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
-        const lastSelectedID = syncedPrefs.read('lastSelectedProjectID');
-        const lastSelectedSection = (lastSelectedID === null) ? null : Project.byIdentifier(lastSelectedID) || Folder.byIdentifier(lastSelectedID);
-        const sectionForm = fuzzySearchLib.searchForm(activeSections, activeSections.map(p => p.name), lastSelectedSection, null); // TODO: return fuzzy matching for projects and folders
+        const sectionForm = fuzzySearchLib.searchForm(activeSections, activeSections.map(p => p.name), defaultSelection, null); // TODO: return fuzzy matching for projects and folders
         await sectionForm.show('Select a project or folder', 'Continue');
         const section = sectionForm.values.menuItem;
         // save project for next time

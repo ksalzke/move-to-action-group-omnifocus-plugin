@@ -27,7 +27,7 @@ interface ActionGroupLib extends PlugIn.Library {
   promptForProject?: () => boolean
   inheritTags?: () => boolean
   moveToTopOfFolder?: () => boolean
-  projectPrompt?: () => Promise<Project | Folder>
+  projectPrompt?: (defaultSelection: Project | Folder) => Promise<Project | Folder>
   tagForm?: () => Promise<TagForm>
   addTags?: (tasks: Task[]) => Promise<void>
   potentialActionGroups?: (proj: Project | null) => Promise<Task[]>
@@ -181,15 +181,13 @@ interface MoveForm extends Form {
     else return false // TODO: consolidate actions into one 'get preference' action
   }
 
-  lib.projectPrompt = async () => { // TODO: rename to sectionPrompt
+  lib.projectPrompt = async (defaultSelection: Project | Folder) => { // TODO: rename to sectionPrompt
     const syncedPrefs = lib.loadSyncedPrefs()
     const fuzzySearchLib = lib.getFuzzySearchLib()
 
     const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status))
-    const lastSelectedID = syncedPrefs.read('lastSelectedProjectID')
-    const lastSelectedSection = (lastSelectedID === null) ? null : Project.byIdentifier(lastSelectedID) || Folder.byIdentifier(lastSelectedID)
 
-    const sectionForm: ProjectForm = fuzzySearchLib.searchForm(activeSections, activeSections.map(p => p.name), lastSelectedSection, null) // TODO: return fuzzy matching for projects and folders
+    const sectionForm: ProjectForm = fuzzySearchLib.searchForm(activeSections, activeSections.map(p => p.name), defaultSelection, null) // TODO: return fuzzy matching for projects and folders
     await sectionForm.show('Select a project or folder', 'Continue')
     const section = sectionForm.values.menuItem
 
