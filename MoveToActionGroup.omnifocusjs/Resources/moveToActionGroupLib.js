@@ -91,6 +91,7 @@
             await folderForm.show('Select a folder', 'Continue');
             const location = lib.moveToTopOfFolder() ? folderForm.values.menuItem.beginning : folderForm.values.menuItem.ending;
             const newProject = new Project(newProjectForm.values.projectName, location);
+            newProject.addTag(lib.prefTag('newProjectTag')); // TODO: stop being inherited by task
             return newProject;
         }
         else {

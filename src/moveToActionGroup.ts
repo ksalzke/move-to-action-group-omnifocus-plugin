@@ -21,8 +21,9 @@
     // select action group from selected project, and perform processing
     if (section instanceof Folder) {
       const location = lib.moveToTopOfFolder() ? section.beginning : section.ending
-      convertTasksToProjects(tasks, location)
-    } else await lib.actionGroupPrompt(tasks, section)
+      const newProjects = convertTasksToProjects(tasks, location)
+      for (const newProject of newProjects) newProject.addTag(lib.prefTag('newProjectTag'))
+    } await lib.actionGroupPrompt(tasks, section)
   })
 
   action.validate = (selection: Selection) => {

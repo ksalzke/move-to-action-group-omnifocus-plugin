@@ -9,6 +9,7 @@
         const projectPrompt = lib.promptForProject();
         const inheritTags = lib.inheritTags();
         const moveToTopOfFolder = lib.moveToTopOfFolder();
+        const newProjectTag = lib.prefTag('newProjectTag');
         // create and show form
         const form = new Form();
         const tagNames = flattenedTags.map(t => t.name);
@@ -18,6 +19,9 @@
         form.addField(new Form.Field.Checkbox('projectPrompt', 'Prompt for Projects', projectPrompt), null);
         form.addField(new Form.Field.Checkbox('inheritTags', 'Inherit Tags When Moving', inheritTags), null);
         form.addField(new Form.Field.Checkbox('moveToTopOfFolder', 'Move to Top of Folder When Creating Projects', moveToTopOfFolder), null);
+        const newProjectTagField = new Form.Field.Option('newProjectTag', 'New Project Tag', flattenedTags, tagNames, newProjectTag, 'None');
+        newProjectTagField.allowsNull = true;
+        form.addField(newProjectTagField, null);
         await form.show('Preferences: Move To Action Group', 'OK');
         // save preferences
         syncedPrefs.write('actionGroupTagID', form.values.actionGroupTag.id.primaryKey);
@@ -26,6 +30,8 @@
         syncedPrefs.write('projectPrompt', form.values.projectPrompt);
         syncedPrefs.write('inheritTags', form.values.inheritTags);
         syncedPrefs.write('moveToTopOfFolder', form.values.moveToTopOfFolder);
+        if (form.values.newProjectTag !== null)
+            syncedPrefs.write('newProjectTagID', form.values.newProjectTag.id.primaryKey);
     });
     action.validate = function (_selection, _sender) {
         return true;
