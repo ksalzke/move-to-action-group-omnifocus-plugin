@@ -26,7 +26,7 @@ interface ActionGroupLib extends PlugIn.Library {
   tagPrompt?: () => boolean
   promptForProject?: () => boolean
   inheritTags?: () => boolean
-  projectPrompt?: () => Promise<Project>
+  projectPrompt?: () => Promise<Project | Folder>
   tagForm?: () => Promise<TagForm>
   addTags?: (tasks: Task[]) => Promise<void>
   potentialActionGroups?: (proj: Project | null) => Promise<Task[]>
@@ -164,7 +164,7 @@ interface MoveForm extends Form {
 
   lib.promptForProject = () => {
     const preferences = lib.loadSyncedPrefs()
-    if (preferences.read('projectPrompt') !== null) return preferences.read('projectPrompt')
+    if (preferences.read('projectPrompt') !== null) return preferences.read('projectPrompt') // TODO: rename setting to 'section prompt'
     else return true
   }
 
@@ -174,21 +174,21 @@ interface MoveForm extends Form {
     else return true
   }
 
-  lib.projectPrompt = async () => {
+  lib.projectPrompt = async () => { // TODO: rename to sectionPrompt
     const syncedPrefs = lib.loadSyncedPrefs()
     const fuzzySearchLib = lib.getFuzzySearchLib()
 
-    const activeProjects = flattenedProjects.filter(project => [Project.Status.Active, Project.Status.OnHold].includes(project.status))
-    const lastSelectedProject = (syncedPrefs.read('lastSelectedProjectID') === null) ? null : Project.byIdentifier(syncedPrefs.read('lastSelectedProjectID'))
+    const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status))
+    const lastSelectedID = syncedPrefs.read('lastSelectedProjectID')
+    const lastSelectedSection = (lastSelectedID === null) ? null : Project.byIdentifier(lastSelectedID) || Folder.byIdentifier(lastSelectedID)
 
-    const projectForm: ProjectForm = fuzzySearchLib.searchForm(activeProjects, activeProjects.map(p => p.name), lastSelectedProject, projectsMatching)
-    projectForm.show('Select a project', 'Continue')
-
-    const project = projectForm.values.menuItem
+    const sectionForm: ProjectForm = fuzzySearchLib.searchForm(activeSections, activeSections.map(p => p.name), lastSelectedSection, null) // TODO: return fuzzy matching for projects and folders
+    await sectionForm.show('Select a project or folder', 'Continue')
+    const section = sectionForm.values.menuItem
 
     // save project for next time
-    syncedPrefs.write('lastSelectedProjectID', project.id.primaryKey)
-    return project
+    syncedPrefs.write('lastSelectedProjectID', section.id.primaryKey)
+    return section
   }
 
   lib.tagForm = async () => {

@@ -14,11 +14,13 @@
 declare var flattenedProjects: ProjectArray
 declare var flattenedTags: TagArray
 declare var flattenedTasks: TaskArray
+declare var flattenedSections: SectionArray
 declare var tags: Tags
 declare var inbox: Inbox
 declare var settings: Settings
 declare var console: Console
 declare function moveTasks(tasks: Task[], position: Task | Project | Task.ChildInsertionLocation): void
+declare function convertTasksToProjects(tasks: Task[], position: Folder | Folder.ChildInsertionLocation): Project[]
 declare function moveTags(tags: Tag[], position: Tag | Tag.ChildInsertionLocation): void
 declare var document: DatabaseDocument | null
 declare var projectsMatching: (search: string) => Project[]
