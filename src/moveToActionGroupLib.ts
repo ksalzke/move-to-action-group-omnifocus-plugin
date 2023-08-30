@@ -44,6 +44,7 @@ interface FuzzySearchLibrary extends PlugIn.Library {
   allTasksFuzzySearchForm?: () => FuzzySearchForm
   remainingTasksFuzzySearchForm?: () => FuzzySearchForm
   activeTagsFuzzySearchForm?: () => FuzzySearchForm
+  activeFoldersFuzzySearchForm?: () => FuzzySearchForm
 }
 
 interface FuzzySearchForm extends Form {
@@ -65,6 +66,12 @@ interface TagForm extends Form {
     another?: boolean
     textInput?: string
     menuItem?: any
+  }
+}
+
+interface NewProjectForm extends Form {
+  values: {
+    projectName?: string
   }
 }
 
@@ -187,13 +194,26 @@ interface MoveForm extends Form {
 
     const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status))
 
-    const sectionForm: ProjectForm = fuzzySearchLib.searchForm(activeSections, activeSections.map(p => p.name), defaultSelection, null) // TODO: return fuzzy matching for projects and folders
+    const sectionForm: ProjectForm = fuzzySearchLib.searchForm([...activeSections, 'New project'], [...activeSections.map(p => p.name), 'New project'], defaultSelection, null) // TODO: return fuzzy matching for projects and folders
     await sectionForm.show('Select a project or folder', 'Continue')
     const section = sectionForm.values.menuItem
 
-    // save project for next time
-    syncedPrefs.write('lastSelectedProjectID', section.id.primaryKey)
-    return section
+    if (section === 'New project') {
+      const newProjectForm: NewProjectForm = new Form()
+      newProjectForm.addField(new Form.Field.String('projectName', 'Project Name', null, null), null)
+      await newProjectForm.show('New Project Name', 'Continue')
+      const folderForm = fuzzySearchLib.activeFoldersFuzzySearchForm()
+      await folderForm.show('Select a folder', 'Continue')
+      const location = lib.moveToTopOfFolder() ? folderForm.values.menuItem.beginning : folderForm.values.menuItem.ending
+      const newProject = new Project(newProjectForm.values.projectName, location)
+      return newProject
+    } else {
+      // save project for next time
+      syncedPrefs.write('lastSelectedProjectID', section.id.primaryKey)
+      return section
+    }
+
+
   }
 
   lib.tagForm = async () => {

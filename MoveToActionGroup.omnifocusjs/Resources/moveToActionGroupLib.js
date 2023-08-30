@@ -80,12 +80,24 @@
         const syncedPrefs = lib.loadSyncedPrefs();
         const fuzzySearchLib = lib.getFuzzySearchLib();
         const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
-        const sectionForm = fuzzySearchLib.searchForm(activeSections, activeSections.map(p => p.name), defaultSelection, null); // TODO: return fuzzy matching for projects and folders
+        const sectionForm = fuzzySearchLib.searchForm([...activeSections, 'New project'], [...activeSections.map(p => p.name), 'New project'], defaultSelection, null); // TODO: return fuzzy matching for projects and folders
         await sectionForm.show('Select a project or folder', 'Continue');
         const section = sectionForm.values.menuItem;
-        // save project for next time
-        syncedPrefs.write('lastSelectedProjectID', section.id.primaryKey);
-        return section;
+        if (section === 'New project') {
+            const newProjectForm = new Form();
+            newProjectForm.addField(new Form.Field.String('projectName', 'Project Name', null, null), null);
+            await newProjectForm.show('New Project Name', 'Continue');
+            const folderForm = fuzzySearchLib.activeFoldersFuzzySearchForm();
+            await folderForm.show('Select a folder', 'Continue');
+            const location = lib.moveToTopOfFolder() ? folderForm.values.menuItem.beginning : folderForm.values.menuItem.ending;
+            const newProject = new Project(newProjectForm.values.projectName, location);
+            return newProject;
+        }
+        else {
+            // save project for next time
+            syncedPrefs.write('lastSelectedProjectID', section.id.primaryKey);
+            return section;
+        }
     };
     lib.tagForm = async () => {
         const fuzzySearchLib = lib.getFuzzySearchLib();
