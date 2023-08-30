@@ -12,7 +12,8 @@
 
     // select action group from selected project, and perform processing
     if (section instanceof Folder) {
-      convertTasksToProjects(tasks, section)
+      const location = lib.moveToTopOfFolder() ? section.beginning : section.ending
+      convertTasksToProjects(tasks, location)
     } else await lib.actionGroupPrompt(tasks, section)
   })
 

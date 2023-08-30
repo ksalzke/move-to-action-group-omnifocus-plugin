@@ -26,6 +26,7 @@ interface ActionGroupLib extends PlugIn.Library {
   tagPrompt?: () => boolean
   promptForProject?: () => boolean
   inheritTags?: () => boolean
+  moveToTopOfFolder?: () => boolean
   projectPrompt?: () => Promise<Project | Folder>
   tagForm?: () => Promise<TagForm>
   addTags?: (tasks: Task[]) => Promise<void>
@@ -172,6 +173,12 @@ interface MoveForm extends Form {
     const preferences = lib.loadSyncedPrefs()
     if (preferences.read('inheritTags') !== null) return preferences.read('inheritTags')
     else return true
+  }
+
+  lib.moveToTopOfFolder = (): boolean => {
+    const preferences = lib.loadSyncedPrefs()
+    if (preferences.read('moveToTopOfFolder') !== null) return preferences.read('moveToTopOfFolder')
+    else return false // TODO: consolidate actions into one 'get preference' action
   }
 
   lib.projectPrompt = async () => { // TODO: rename to sectionPrompt

@@ -69,6 +69,13 @@
         else
             return true;
     };
+    lib.moveToTopOfFolder = () => {
+        const preferences = lib.loadSyncedPrefs();
+        if (preferences.read('moveToTopOfFolder') !== null)
+            return preferences.read('moveToTopOfFolder');
+        else
+            return false; // TODO: consolidate actions into one 'get preference' action
+    };
     lib.projectPrompt = async () => {
         const syncedPrefs = lib.loadSyncedPrefs();
         const fuzzySearchLib = lib.getFuzzySearchLib();

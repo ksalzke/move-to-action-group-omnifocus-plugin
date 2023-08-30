@@ -8,6 +8,7 @@
         const tagPrompt = lib.tagPrompt();
         const projectPrompt = lib.promptForProject();
         const inheritTags = lib.inheritTags();
+        const moveToTopOfFolder = lib.moveToTopOfFolder();
         // create and show form
         const form = new Form();
         const tagNames = flattenedTags.map(t => t.name);
@@ -16,6 +17,7 @@
         form.addField(new Form.Field.Checkbox('tagPrompt', 'Prompt for Tags', tagPrompt), null);
         form.addField(new Form.Field.Checkbox('projectPrompt', 'Prompt for Projects', projectPrompt), null);
         form.addField(new Form.Field.Checkbox('inheritTags', 'Inherit Tags When Moving', inheritTags), null);
+        form.addField(new Form.Field.Checkbox('moveToTopOfFolder', 'Move to Top of Folder When Creating Projects', moveToTopOfFolder), null);
         await form.show('Preferences: Move To Action Group', 'OK');
         // save preferences
         syncedPrefs.write('actionGroupTagID', form.values.actionGroupTag.id.primaryKey);
@@ -23,6 +25,7 @@
         syncedPrefs.write('tagPrompt', form.values.tagPrompt);
         syncedPrefs.write('projectPrompt', form.values.projectPrompt);
         syncedPrefs.write('inheritTags', form.values.inheritTags);
+        syncedPrefs.write('moveToTopOfFolder', form.values.moveToTopOfFolder);
     });
     action.validate = function (_selection, _sender) {
         return true;
