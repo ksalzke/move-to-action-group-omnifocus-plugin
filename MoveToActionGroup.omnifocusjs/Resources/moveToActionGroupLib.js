@@ -9,7 +9,7 @@
     /**------------------------------------------------------------------------
      **                           MAIN LOGIC
      *------------------------------------------------------------------------**/
-    lib.processTasks = async (tasks, folder, promptForProject) => {
+    lib.processTasks = async (tasks, promptForProject, promptForFolder) => {
         const syncedPrefs = lib.loadSyncedPrefs();
         // determine default selection - use current or assigned project if applicbale, otherwise use the last selected section
         const currentProject = tasks[0].containingProject;
@@ -20,6 +20,8 @@
             : (tasks[0].assignedContainer instanceof Project) ?
                 tasks[0].assignedContainer
                 : lastSelectedSection;
+        /*======= Prompt for folder (if relevant) =======*/
+        const folder = (promptForFolder) ? await lib.promptForFolder() : null;
         /*------- Prompt for section (if enabled) -------*/
         const section = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null;
         /*------- Prompt for tag(s) (if enabled and no tags) -------*/

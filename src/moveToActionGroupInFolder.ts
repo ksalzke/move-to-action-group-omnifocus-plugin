@@ -4,9 +4,7 @@
     const lib = this.libraries[0]
     const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)]
 
-    const folder = await lib.promptForFolder()
-
-    await lib.processTasks(tasks, folder, true)
+    await lib.processTasks(tasks, true, true)
 
   })
 

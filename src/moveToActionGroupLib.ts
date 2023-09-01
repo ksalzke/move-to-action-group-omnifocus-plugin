@@ -92,7 +92,7 @@ interface NewActionGroupForm extends Form {
 
 interface ActionGroupLib extends PlugIn.Library {
   // main logic
-  processTasks?: (tasks: Task[], folder: Folder | null, promptForProject: boolean) => Promise<void>
+  processTasks?: (tasks: Task[], promptForProject: boolean, promptForFolder: boolean) => Promise<void>
   promptForSection?: (defaultSelection: Project | Folder, folder: Folder | null) => Promise<Project | Folder>
   promptForTags?: (tasks: Task[]) => Promise<void>
   createActionGroupAndMoveTasks?: (tasks: Task[], location: Task | Project) => Promise<void>
@@ -137,7 +137,7 @@ interface ActionGroupLib extends PlugIn.Library {
    **                           MAIN LOGIC
    *------------------------------------------------------------------------**/
 
-  lib.processTasks = async (tasks: Task[], folder: Folder | null, promptForProject: boolean) => {
+  lib.processTasks = async (tasks: Task[], promptForProject: boolean, promptForFolder: boolean) => {
     const syncedPrefs = lib.loadSyncedPrefs()
 
     // determine default selection - use current or assigned project if applicbale, otherwise use the last selected section
@@ -149,6 +149,10 @@ interface ActionGroupLib extends PlugIn.Library {
       : (tasks[0].assignedContainer instanceof Project) ?
         tasks[0].assignedContainer
         : lastSelectedSection
+
+
+    /*======= Prompt for folder (if relevant) =======*/
+    const folder = (promptForFolder) ? await lib.promptForFolder() : null
 
     /*------- Prompt for section (if enabled) -------*/
     const section: null | Project | Folder = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null

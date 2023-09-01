@@ -5,7 +5,7 @@
     const lib = this.libraries[0]
     const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)]
 
-    lib.processTasks(tasks, null, true)
+    lib.processTasks(tasks, true, null)
 
   })
 
