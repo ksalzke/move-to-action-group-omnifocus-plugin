@@ -185,7 +185,15 @@ interface ActionGroupLib extends PlugIn.Library {
         await lib.moveTasks(tasks, section, setPosition)
         break
       default:
-        await lib.moveTasks(tasks, actionGroupSelection, setPosition)
+        if (actionGroupSelection.project) {
+          // selected item was a project
+          const secondActionGroupForm = await lib.actionGroupForm(actionGroupSelection.project)
+          await secondActionGroupForm.show('Select Action Group', 'OK')
+          await lib.moveTasks(tasks, secondActionGroupForm.values.menuItem, secondActionGroupForm.values.setPosition)
+        } else {
+          // selected item was a task
+          await lib.moveTasks(tasks, actionGroupSelection, setPosition)
+        }
     }
   }
 
@@ -436,13 +444,13 @@ interface ActionGroupLib extends PlugIn.Library {
 
   /*------------------ Other Helper Functions -----------------*/
 
-  lib.potentialActionGroups = async (proj) => {
+  lib.potentialActionGroups = async (proj: Project | null): Promise<Task[]> => {
     const tag = await lib.getPrefTag('actionGroupTag')
 
     const allTasks = (proj === null) ? flattenedTasks : proj.flattenedTasks
 
     const allActionGroups = allTasks.filter(task => {
-      if (task.project !== null) return false
+      if (task.project !== null && proj !== null) return false
       if (task.tags.includes(tag)) return true
       if (lib.autoInclude() === 'all tasks') return true
       if (lib.autoInclude() === 'all' && task.hasChildren) return true
