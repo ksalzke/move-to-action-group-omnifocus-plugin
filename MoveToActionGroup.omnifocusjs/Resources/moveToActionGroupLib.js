@@ -1,12 +1,147 @@
+// #region Type Definitions
+/** ========================================================================
+ **                            TYPE DEFINITIONS
+ *========================================================================**/
+// #endregion
 (() => {
     const preferences = new Preferences(null);
     const lib = new PlugIn.Library(new Version('1.0'));
-    lib.goTo = async (task) => {
-        if (Device.current.mac)
-            await document.newTabOnWindow(document.windows[0]); // new tab - only Mac supported
-        URL.fromString('omnifocus:///task/' + task.containingProject.id.primaryKey).open();
-        URL.fromString('omnifocus:///task/' + task.id.primaryKey).open();
+    /**------------------------------------------------------------------------
+     *                           MAIN LOGIC
+     *------------------------------------------------------------------------**/
+    lib.processTasks = async (tasks) => {
+        const syncedPrefs = lib.loadSyncedPrefs();
+        // determine default selection - use current or assigned project if applicbale, otherwise use the last selected section
+        const currentProject = tasks[0].containingProject;
+        const lastSelectedID = syncedPrefs.read('lastSelectedProjectID');
+        const lastSelectedSection = (lastSelectedID === null) ? null : Project.byIdentifier(lastSelectedID) || Folder.byIdentifier(lastSelectedID);
+        const defaultSelection = currentProject ?
+            currentProject
+            : (tasks[0].assignedContainer instanceof Project) ?
+                tasks[0].assignedContainer
+                : lastSelectedSection;
+        /*------- Prompt for section (if enabled) -------*/
+        const section = (lib.promptForProject()) ? await lib.promptForSection(defaultSelection) : null;
+        /*------- Prompt for tag(s) (if enabled and no tags) -------*/
+        if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0))
+            await lib.promptForTags(tasks);
+        /*------- Create new project if folder selected -------*/
+        if (section instanceof Folder) {
+            const location = lib.moveToTopOfFolder() ? section.beginning : section.ending;
+            const newProjects = convertTasksToProjects(tasks, location);
+            for (const newProject of newProjects)
+                newProject.addTag(lib.prefTag('newProjectTag'));
+            return;
+        }
+        /*------- Otherwise, prompt for action group based on project -------*/
+        const actionGroupForm = await lib.actionGroupForm(section);
+        await actionGroupForm.show('Select Action Group', 'OK');
+        const actionGroupSelection = actionGroupForm.values.menuItem;
+        const setPosition = actionGroupForm.values.setPosition;
+        /*------- Create destination (if needed) and move -------*/
+        // position is also set as part of moveTasks function
+        switch (actionGroupSelection) {
+            case 'New action group':
+                await lib.createActionGroupAndMoveTasks(tasks, section);
+                break;
+            case 'Add to root of project':
+                await lib.moveTasks(tasks, section, setPosition);
+                break;
+            default:
+                await lib.moveTasks(tasks, actionGroupSelection, setPosition);
+        }
     };
+    lib.promptForSection = async (defaultSelection) => {
+        const syncedPrefs = lib.loadSyncedPrefs();
+        const sectionForm = lib.sectionForm(defaultSelection);
+        await sectionForm.show('Select a project or folder', 'Continue');
+        const section = sectionForm.values.menuItem;
+        if (section === 'New project') {
+            const newProjectForm = lib.newProjectForm();
+            await newProjectForm.show('New Project Name', 'Continue');
+            const folderForm = lib.getFuzzySearchLib().activeFoldersFuzzySearchForm();
+            await folderForm.show('Select a folder', 'Continue');
+            const location = lib.moveToTopOfFolder() ? folderForm.values.menuItem.beginning : folderForm.values.menuItem.ending;
+            const newProject = new Project(newProjectForm.values.projectName, location);
+            newProject.addTag(lib.prefTag('newProjectTag')); // TODO: stop being inherited by task
+            return newProject;
+        }
+        else {
+            // save project for next time
+            syncedPrefs.write('lastSelectedProjectID', section.id.primaryKey);
+            return section;
+        }
+    };
+    lib.promptForTags = async (tasks) => {
+        const untagged = tasks.filter(task => task.tags.length === 0);
+        let form;
+        do {
+            // show form
+            const tagForm = await lib.tagForm();
+            form = await tagForm.show('Select a tag to apply to untagged tasks', 'OK');
+            const tag = tagForm.values.menuItem;
+            untagged.forEach(task => task.addTag(tag));
+        } while (form.values.another);
+    };
+    lib.createActionGroupAndMoveTasks = async (tasks, location) => {
+        // create action group
+        const newActionGroupForm = lib.newActionGroupForm();
+        await newActionGroupForm.show('Action Group Name', 'Create');
+        location = new Task(newActionGroupForm.values.groupName, location);
+        location.completedByChildren = newActionGroupForm.values.completeWithLast;
+        const tag = await lib.getPrefTag('actionGroupTag');
+        if (newActionGroupForm.values.tagNewGroup)
+            location.addTag(tag);
+        // move task to new action group
+        await lib.moveTasks(tasks, location, false);
+    };
+    lib.moveTasks = async (tasks, location, setPosition) => {
+        const loc = setPosition ? await lib.promptForLocation(tasks, location) : location.ending;
+        switch (loc) {
+            case 'new':
+                await lib.createActionGroupAndMoveTasks(tasks, location);
+                break;
+            case 'appended as note':
+                break;
+            default:
+                // clear any existing tags
+                const tag = await lib.getPrefTag('actionGroupTag');
+                const inheritTags = lib.inheritTags();
+                const hasExistingTags = tasks.map(task => task.tags.length > 0);
+                moveTasks(tasks, loc);
+                save();
+                for (let i = 0; i < tasks.length; i++) {
+                    if (!hasExistingTags[i])
+                        tasks[i].removeTag(tag);
+                    if (!hasExistingTags[i] && !inheritTags)
+                        tasks[i].clearTags();
+                }
+                break;
+        }
+        // store last moved task as preference
+        preferences.write('lastMovedID', tasks[0].id.primaryKey);
+    };
+    lib.promptForLocation = async (tasks, group) => {
+        const form = lib.positionForm(group);
+        await form.show('Task Location', 'Move');
+        if (form.values.taskLocation === 'new')
+            return 'new';
+        else if (form.values.taskLocation === 'beginning')
+            return group.beginning;
+        if (form.values.appendAsNote) {
+            for (const task of tasks) {
+                form.values.taskLocation.note = form.values.taskLocation.note + '\n- ' + task.name;
+                deleteObject(task);
+                return 'appended as note';
+            }
+        }
+        return form.values.taskLocation.after;
+    };
+    // #region Helper Functions
+    /**========================================================================
+     **                            HELPER FUNCTIONS
+     *========================================================================**/
+    /*================== Get Other Libraries =================*/
     lib.loadSyncedPrefs = () => {
         const syncedPrefsPlugin = PlugIn.find('com.KaitlinSalzke.SyncedPrefLibrary', null);
         if (syncedPrefsPlugin !== null) {
@@ -27,6 +162,7 @@
         }
         return fuzzySearchPlugIn.library('fuzzySearchLib');
     };
+    /*================== Get Preference Info =================*/
     lib.prefTag = (prefTag) => {
         const preferences = lib.loadSyncedPrefs();
         const tagID = preferences.readString(`${prefTag}ID`);
@@ -76,47 +212,57 @@
         else
             return false; // TODO: consolidate actions into one 'get preference' action
     };
-    lib.projectPrompt = async (defaultSelection) => {
-        const syncedPrefs = lib.loadSyncedPrefs();
-        const fuzzySearchLib = lib.getFuzzySearchLib();
-        const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
-        const sectionForm = fuzzySearchLib.searchForm([...activeSections, 'New project'], [...activeSections.map(p => p.name), 'New project'], defaultSelection, null); // TODO: return fuzzy matching for projects and folders
-        await sectionForm.show('Select a project or folder', 'Continue');
-        const section = sectionForm.values.menuItem;
-        if (section === 'New project') {
-            const newProjectForm = new Form();
-            newProjectForm.addField(new Form.Field.String('projectName', 'Project Name', null, null), null);
-            await newProjectForm.show('New Project Name', 'Continue');
-            const folderForm = fuzzySearchLib.activeFoldersFuzzySearchForm();
-            await folderForm.show('Select a folder', 'Continue');
-            const location = lib.moveToTopOfFolder() ? folderForm.values.menuItem.beginning : folderForm.values.menuItem.ending;
-            const newProject = new Project(newProjectForm.values.projectName, location);
-            newProject.addTag(lib.prefTag('newProjectTag')); // TODO: stop being inherited by task
-            return newProject;
-        }
-        else {
-            // save project for next time
-            syncedPrefs.write('lastSelectedProjectID', section.id.primaryKey);
-            return section;
-        }
-    };
-    lib.tagForm = async () => {
+    /*------------------ Get Forms -----------------*/
+    lib.tagForm = () => {
         const fuzzySearchLib = lib.getFuzzySearchLib();
         const form = fuzzySearchLib.activeTagsFuzzySearchForm();
         form.addField(new Form.Field.Checkbox('another', 'Add another?', false), null);
         return form;
     };
-    lib.addTags = async (tasks) => {
-        const untagged = tasks.filter(task => task.tags.length === 0);
-        let form;
-        do {
-            // show form
-            const tagForm = await lib.tagForm();
-            form = await tagForm.show('Select a tag to apply to untagged tasks', 'OK');
-            const tag = tagForm.values.menuItem;
-            untagged.forEach(task => task.addTag(tag));
-        } while (form.values.another);
+    lib.sectionForm = (defaultSelection) => {
+        const fuzzySearchLib = lib.getFuzzySearchLib();
+        const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
+        const defaultSelected = activeSections.includes(defaultSelection) ? defaultSelection : null;
+        return fuzzySearchLib.searchForm([...activeSections, 'New project'], [...activeSections.map(p => p.name), 'New project'], defaultSelected, null); // TODO: return fuzzy matching for projects and folders
     };
+    lib.newProjectForm = () => {
+        const newProjectForm = new Form();
+        newProjectForm.addField(new Form.Field.String('projectName', 'Project Name', null, null), null);
+        return newProjectForm;
+    };
+    lib.actionGroupForm = async (proj) => {
+        const fuzzySearchLib = lib.getFuzzySearchLib();
+        const groups = await lib.potentialActionGroups(proj);
+        const additionalOptions = lib.promptForProject() ? ['Add to root of project', 'New action group'] : [];
+        const formOptions = [...groups, ...additionalOptions];
+        const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions];
+        const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, formOptions[0], null);
+        searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null);
+        return searchForm;
+    };
+    lib.positionForm = (group) => {
+        const form = new Form();
+        const remainingChildren = group.children.filter(child => child.taskStatus === Task.Status.Available || child.taskStatus === Task.Status.Blocked);
+        form.addField(new Form.Field.Option('taskLocation', 'Insert after', ['beginning', ...remainingChildren, 'new'], ['(beginning)', ...remainingChildren.map(child => child.name), 'New action group'], remainingChildren[remainingChildren.length - 1] || 'beginning', null), null);
+        form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false), null);
+        form.validate = (form) => {
+            if (form.values.appendAsNote && form.values.taskLocation === 'beginning')
+                return false; // can't append to non-existant task
+            if (form.values.appendAsNote && form.values.taskLocation === 'new')
+                return false; // won't be a new action group if task isn't added
+            else
+                return true;
+        };
+        return form;
+    };
+    lib.newActionGroupForm = () => {
+        const form = new Form();
+        form.addField(new Form.Field.String('groupName', 'Group Name', null, null), null);
+        form.addField(new Form.Field.Checkbox('completeWithLast', 'Complete with last action', settings.boolForKey('OFMCompleteWhenLastItemComplete')), null);
+        form.addField(new Form.Field.Checkbox('tagNewGroup', 'Apply action group tag', lib.autoInclude() === 'none'), null);
+        return form;
+    };
+    /*------------------ Other Helper Functions -----------------*/
     lib.potentialActionGroups = async (proj) => {
         const tag = await lib.getPrefTag('actionGroupTag');
         const allTasks = (proj === null) ? flattenedTasks : proj.flattenedTasks;
@@ -137,82 +283,12 @@
         const availableActionGroups = allActionGroups.filter(task => ![Task.Status.Completed, Task.Status.Dropped].includes(task.taskStatus));
         return availableActionGroups;
     };
-    lib.actionGroupPrompt = async (tasks, proj) => {
-        const fuzzySearchLib = lib.getFuzzySearchLib();
-        const groups = await lib.potentialActionGroups(proj);
-        const additionalOptions = lib.promptForProject() ? ['Add to root of project', 'New action group'] : [];
-        const formOptions = [...groups, ...additionalOptions];
-        const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions];
-        const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, formOptions[0], null);
-        searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null);
-        const actionGroupForm = await searchForm.show('Select Action Group', 'OK');
-        const actionGroup = searchForm.values.menuItem;
-        const setPosition = actionGroupForm.values.setPosition;
-        switch (actionGroup) {
-            case 'New action group':
-                await lib.moveToNewActionGroup(tasks, proj);
-                break;
-            case 'Add to root of project':
-                lib.moveTasks(tasks, proj, setPosition);
-                break;
-            default:
-                // @ts-ignore after above have run actionGroup can only be a Task // TODO: review
-                lib.moveTasks(tasks, actionGroup, setPosition);
-        }
-        return;
+    lib.goTo = async (task) => {
+        if (Device.current.mac)
+            await document.newTabOnWindow(document.windows[0]); // new tab - only Mac supported
+        URL.fromString('omnifocus:///task/' + task.containingProject.id.primaryKey).open();
+        URL.fromString('omnifocus:///task/' + task.id.primaryKey).open();
     };
-    lib.locationForm = async (group) => {
-        const form = new Form();
-        const remainingChildren = group.children.filter(child => child.taskStatus === Task.Status.Available || child.taskStatus === Task.Status.Blocked);
-        form.addField(new Form.Field.Option('taskLocation', 'Insert after', ['beginning', ...remainingChildren, 'new'], ['(beginning)', ...remainingChildren.map(child => child.name), 'New action group'], remainingChildren[remainingChildren.length - 1] || 'beginning', null), null);
-        form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false), null);
-        return form;
-    };
-    lib.selectLocation = async (tasks, group) => {
-        const form = await lib.locationForm(group);
-        await form.show('Task Location', 'Move');
-        if (form.values.taskLocation === 'new')
-            await lib.moveToNewActionGroup(tasks, group);
-        const appendAsNote = form.values.appendAsNote;
-        if (appendAsNote) {
-            for (const task of tasks) {
-                // @ts-ignore // TODO: come back and review this
-                form.values.taskLocation.note = form.values.taskLocation.note + '\n- ' + task.name;
-                deleteObject(task);
-            }
-        }
-        // @ts-ignore // TODO: come back and review this
-        return (form.values.taskLocation === 'beginning') ? group.beginning : form.values.taskLocation.after;
-    };
-    lib.moveToNewActionGroup = async (tasks, location) => {
-        const tag = await lib.getPrefTag('actionGroupTag');
-        const inheritTags = lib.inheritTags();
-        const form = new Form();
-        form.addField(new Form.Field.String('groupName', 'Group Name', null, null), null);
-        form.addField(new Form.Field.Checkbox('completeWithLast', 'Complete with last action', settings.boolForKey('OFMCompleteWhenLastItemComplete')), null);
-        form.addField(new Form.Field.Checkbox('tagNewGroup', 'Apply action group tag', lib.autoInclude() === 'none'), null);
-        await form.show('Action Group Name', 'Create and Move');
-        const newGroup = new Task(form.values.groupName, location);
-        newGroup.completedByChildren = form.values.completeWithLast;
-        if (form.values.tagNewGroup)
-            newGroup.addTag(tag);
-        lib.moveTasks(tasks, newGroup, false);
-    };
-    lib.moveTasks = async (tasks, location, setPosition) => {
-        const loc = setPosition ? await lib.selectLocation(tasks, location) : location.ending;
-        const tag = await lib.getPrefTag('actionGroupTag');
-        const inheritTags = lib.inheritTags();
-        const hasExistingTags = tasks.map(task => task.tags.length > 0);
-        moveTasks(tasks, loc);
-        save();
-        for (let i = 0; i < tasks.length; i++) {
-            if (!hasExistingTags[i])
-                tasks[i].removeTag(tag);
-            if (!hasExistingTags[i] && !inheritTags)
-                tasks[i].clearTags();
-        }
-        // store last moved task as preference
-        preferences.write('lastMovedID', tasks[0].id.primaryKey);
-    };
+    // #endregion
     return lib;
 })();
