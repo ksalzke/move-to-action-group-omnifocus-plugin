@@ -20,13 +20,13 @@
             : (tasks[0].assignedContainer instanceof Project) ?
                 tasks[0].assignedContainer
                 : lastSelectedSection;
+        /*------- Prompt for tag(s) (if enabled and no tags) -------*/
+        if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0))
+            await lib.promptForTags(tasks);
         /*======= Prompt for folder (if relevant) =======*/
         const folder = (promptForFolder) ? await lib.promptForFolder() : null; // folder: Omni Automation
         /*------- Prompt for section (if enabled) -------*/
         const section = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null; // section: Omni Automation
-        /*------- Prompt for tag(s) (if enabled and no tags) -------*/
-        if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0))
-            await lib.promptForTags(tasks);
         /*------- Create new project if folder selected -------*/
         if (section instanceof Folder) {
             const location = lib.moveToTopOfFolder() ? section.beginning : section.ending;
