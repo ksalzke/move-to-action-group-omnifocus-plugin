@@ -6,7 +6,6 @@
         const actionGroupTag = lib.prefTag('actionGroupTag');
         const autoInclude = lib.autoInclude();
         const tagPrompt = lib.tagPrompt();
-        const projectPrompt = lib.promptForProject();
         const inheritTags = lib.inheritTags();
         const moveToTopOfFolder = lib.moveToTopOfFolder();
         const newProjectTag = lib.prefTag('newProjectTag');
@@ -16,7 +15,6 @@
         form.addField(new Form.Field.Option('actionGroupTag', 'Action Group Tag', flattenedTags, tagNames, actionGroupTag, null), null);
         form.addField(new Form.Field.Option('autoInclude', 'Automatically Include Action Groups', ['none', 'top', 'all', 'all tasks'], ['None', 'Top-Level', 'All Action Groups', 'All Tasks'], autoInclude, null), null);
         form.addField(new Form.Field.Checkbox('tagPrompt', 'Prompt for Tags', tagPrompt), null);
-        form.addField(new Form.Field.Checkbox('projectPrompt', 'Prompt for Projects', projectPrompt), null);
         form.addField(new Form.Field.Checkbox('inheritTags', 'Inherit Tags When Moving', inheritTags), null);
         form.addField(new Form.Field.Checkbox('moveToTopOfFolder', 'Move to Top of Folder When Creating Projects', moveToTopOfFolder), null);
         const newProjectTagField = new Form.Field.Option('newProjectTag', 'New Project Tag', flattenedTags, tagNames, newProjectTag, 'None');
@@ -27,7 +25,6 @@
         syncedPrefs.write('actionGroupTagID', form.values.actionGroupTag.id.primaryKey);
         syncedPrefs.write('autoInclude', form.values.autoInclude);
         syncedPrefs.write('tagPrompt', form.values.tagPrompt);
-        syncedPrefs.write('projectPrompt', form.values.projectPrompt);
         syncedPrefs.write('inheritTags', form.values.inheritTags);
         syncedPrefs.write('moveToTopOfFolder', form.values.moveToTopOfFolder);
         if (form.values.newProjectTag !== null)

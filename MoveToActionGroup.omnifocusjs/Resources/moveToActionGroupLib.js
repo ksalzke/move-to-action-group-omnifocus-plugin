@@ -7,9 +7,9 @@
     const preferences = new Preferences(null);
     const lib = new PlugIn.Library(new Version('1.0'));
     /**------------------------------------------------------------------------
-     *                           MAIN LOGIC
+     **                           MAIN LOGIC
      *------------------------------------------------------------------------**/
-    lib.processTasks = async (tasks, folder) => {
+    lib.processTasks = async (tasks, folder, promptForProject) => {
         const syncedPrefs = lib.loadSyncedPrefs();
         // determine default selection - use current or assigned project if applicbale, otherwise use the last selected section
         const currentProject = tasks[0].containingProject;
@@ -21,7 +21,7 @@
                 tasks[0].assignedContainer
                 : lastSelectedSection;
         /*------- Prompt for section (if enabled) -------*/
-        const section = (lib.promptForProject()) ? await lib.promptForSection(defaultSelection, folder) : null;
+        const section = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null;
         /*------- Prompt for tag(s) (if enabled and no tags) -------*/
         if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0))
             await lib.promptForTags(tasks);
@@ -191,13 +191,6 @@
         const preferences = lib.loadSyncedPrefs();
         return preferences.readBoolean('tagPrompt');
     };
-    lib.promptForProject = () => {
-        const preferences = lib.loadSyncedPrefs();
-        if (preferences.read('projectPrompt') !== null)
-            return preferences.read('projectPrompt'); // TODO: rename setting to 'section prompt'
-        else
-            return true;
-    };
     lib.inheritTags = () => {
         const preferences = lib.loadSyncedPrefs();
         if (preferences.read('inheritTags') !== null)
@@ -234,7 +227,7 @@
     lib.actionGroupForm = async (proj) => {
         const fuzzySearchLib = lib.getFuzzySearchLib();
         const groups = await lib.potentialActionGroups(proj);
-        const additionalOptions = lib.promptForProject() ? ['Add to root of project', 'New action group'] : [];
+        const additionalOptions = ['Add to root of project', 'New action group'];
         const formOptions = [...groups, ...additionalOptions];
         const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions];
         const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, formOptions[0], null);

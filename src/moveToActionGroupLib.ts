@@ -92,7 +92,7 @@ interface NewActionGroupForm extends Form {
 
 interface ActionGroupLib extends PlugIn.Library {
   // main logic
-  processTasks?: (tasks: Task[], folder: Folder | null) => Promise<void>
+  processTasks?: (tasks: Task[], folder: Folder | null, promptForProject: boolean) => Promise<void>
   promptForSection?: (defaultSelection: Project | Folder, folder: Folder | null) => Promise<Project | Folder>
   promptForTags?: (tasks: Task[]) => Promise<void>
   createActionGroupAndMoveTasks?: (tasks: Task[], location: Task | Project) => Promise<void>
@@ -108,7 +108,6 @@ interface ActionGroupLib extends PlugIn.Library {
   getPrefTag?: (prefTag: string) => Promise<Tag>
   autoInclude?: () => 'none' | 'top' | 'all' | 'all tasks'
   tagPrompt?: () => boolean
-  promptForProject?: () => boolean
   inheritTags?: () => boolean
   moveToTopOfFolder?: () => boolean
 
@@ -135,10 +134,10 @@ interface ActionGroupLib extends PlugIn.Library {
   const lib: ActionGroupLib = new PlugIn.Library(new Version('1.0'))
 
   /**------------------------------------------------------------------------
-   *                           MAIN LOGIC
+   **                           MAIN LOGIC
    *------------------------------------------------------------------------**/
 
-  lib.processTasks = async (tasks: Task[], folder: Folder | null) => {
+  lib.processTasks = async (tasks: Task[], folder: Folder | null, promptForProject: boolean) => {
     const syncedPrefs = lib.loadSyncedPrefs()
 
     // determine default selection - use current or assigned project if applicbale, otherwise use the last selected section
@@ -152,7 +151,7 @@ interface ActionGroupLib extends PlugIn.Library {
         : lastSelectedSection
 
     /*------- Prompt for section (if enabled) -------*/
-    const section: null | Project | Folder = (lib.promptForProject()) ? await lib.promptForSection(defaultSelection, folder) : null
+    const section: null | Project | Folder = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null
 
     /*------- Prompt for tag(s) (if enabled and no tags) -------*/
     if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0)) await lib.promptForTags(tasks)
@@ -354,12 +353,6 @@ interface ActionGroupLib extends PlugIn.Library {
     return preferences.readBoolean('tagPrompt')
   }
 
-  lib.promptForProject = () => {
-    const preferences = lib.loadSyncedPrefs()
-    if (preferences.read('projectPrompt') !== null) return preferences.read('projectPrompt') // TODO: rename setting to 'section prompt'
-    else return true
-  }
-
   lib.inheritTags = () => {
     const preferences = lib.loadSyncedPrefs()
     if (preferences.read('inheritTags') !== null) return preferences.read('inheritTags')
@@ -400,7 +393,7 @@ interface ActionGroupLib extends PlugIn.Library {
     const fuzzySearchLib = lib.getFuzzySearchLib()
     const groups = await lib.potentialActionGroups(proj)
 
-    const additionalOptions = lib.promptForProject() ? ['Add to root of project', 'New action group'] : []
+    const additionalOptions = ['Add to root of project', 'New action group']
 
     const formOptions = [...groups, ...additionalOptions]
     const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions]
