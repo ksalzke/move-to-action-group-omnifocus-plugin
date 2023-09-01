@@ -92,8 +92,8 @@ interface NewActionGroupForm extends Form {
 
 interface ActionGroupLib extends PlugIn.Library {
   // main logic
-  processTasks?: (tasks: Task[]) => Promise<void>
-  promptForSection?: (defaultSelection: Project | Folder) => Promise<Project | Folder>
+  processTasks?: (tasks: Task[], folder: Folder | null) => Promise<void>
+  promptForSection?: (defaultSelection: Project | Folder, folder: Folder | null) => Promise<Project | Folder>
   promptForTags?: (tasks: Task[]) => Promise<void>
   createActionGroupAndMoveTasks?: (tasks: Task[], location: Task | Project) => Promise<void>
   moveTasks?: (tasks: Task[], location: Project | Task, setPosition: boolean) => Promise<void>
@@ -114,7 +114,7 @@ interface ActionGroupLib extends PlugIn.Library {
 
   // return forms
   tagForm?: () => TagForm
-  sectionForm?: (defaultSelection: Project | Folder) => SectionForm
+  sectionForm?: (defaultSelection: Project | Folder, folder: Folder | null) => SectionForm
   newProjectForm?: () => NewProjectForm
   actionGroupForm?: (project: Project) => Promise<ActionGroupForm>
   positionForm?: (group: Task | Project) => PositionForm
@@ -123,6 +123,7 @@ interface ActionGroupLib extends PlugIn.Library {
   // other helper functions
   potentialActionGroups?: (proj: Project | null) => Promise<Task[]>
   goTo?: (task: Task) => Promise<void>
+  promptForFolder?: () => Promise<Folder>
 }
 
 // #endregion
@@ -137,7 +138,7 @@ interface ActionGroupLib extends PlugIn.Library {
    *                           MAIN LOGIC
    *------------------------------------------------------------------------**/
 
-  lib.processTasks = async (tasks: Task[]) => {
+  lib.processTasks = async (tasks: Task[], folder: Folder | null) => {
     const syncedPrefs = lib.loadSyncedPrefs()
 
     // determine default selection - use current or assigned project if applicbale, otherwise use the last selected section
@@ -151,7 +152,7 @@ interface ActionGroupLib extends PlugIn.Library {
         : lastSelectedSection
 
     /*------- Prompt for section (if enabled) -------*/
-    const section: null | Project | Folder = (lib.promptForProject()) ? await lib.promptForSection(defaultSelection) : null
+    const section: null | Project | Folder = (lib.promptForProject()) ? await lib.promptForSection(defaultSelection, folder) : null
 
     /*------- Prompt for tag(s) (if enabled and no tags) -------*/
     if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0)) await lib.promptForTags(tasks)
@@ -185,9 +186,9 @@ interface ActionGroupLib extends PlugIn.Library {
     }
   }
 
-  lib.promptForSection = async (defaultSelection: Project | Folder) => {
+  lib.promptForSection = async (defaultSelection: Project | Folder, folder: Folder | null): Promise<Project | Folder> => {
     const syncedPrefs = lib.loadSyncedPrefs()
-    const sectionForm = lib.sectionForm(defaultSelection)
+    const sectionForm = lib.sectionForm(defaultSelection, folder)
     await sectionForm.show('Select a project or folder', 'Continue')
     const section = sectionForm.values.menuItem
 
@@ -381,9 +382,10 @@ interface ActionGroupLib extends PlugIn.Library {
     return form
   }
 
-  lib.sectionForm = (defaultSelection: Project | Folder): SectionForm => {
+  lib.sectionForm = (defaultSelection: Project | Folder, folder: Folder | null): SectionForm => {
     const fuzzySearchLib = lib.getFuzzySearchLib()
-    const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status))
+    const relevantSections = folder ? folder.flattenedSections : flattenedSections
+    const activeSections = relevantSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status))
     const defaultSelected = activeSections.includes(defaultSelection) ? defaultSelection : null
     return fuzzySearchLib.searchForm([...activeSections, 'New project'], [...activeSections.map(p => p.name), 'New project'], defaultSelected, null) // TODO: return fuzzy matching for projects and folders
   }
@@ -460,6 +462,13 @@ interface ActionGroupLib extends PlugIn.Library {
     if (Device.current.mac) await document.newTabOnWindow(document.windows[0]) // new tab - only Mac supported
     URL.fromString('omnifocus:///task/' + task.containingProject.id.primaryKey).open()
     URL.fromString('omnifocus:///task/' + task.id.primaryKey).open()
+  }
+
+  lib.promptForFolder = async (): Promise<Folder> => {
+    const fuzzySearchLib = lib.getFuzzySearchLib()
+    const folderForm = fuzzySearchLib.activeFoldersFuzzySearchForm()
+    await folderForm.show('Select a folder', 'Continue')
+    return folderForm.values.menuItem
   }
 
   // #endregion

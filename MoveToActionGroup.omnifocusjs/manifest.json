@@ -10,6 +10,10 @@
       "image": "arrow.right.to.line.alt"
     },
     {
+      "identifier": "moveToActionGroupInFolder",
+      "image": "folder.fill"
+    },
+    {
       "identifier": "goToLastMoved",
       "image": "backward.fill"
     },

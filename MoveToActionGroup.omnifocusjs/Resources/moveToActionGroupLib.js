@@ -9,7 +9,7 @@
     /**------------------------------------------------------------------------
      *                           MAIN LOGIC
      *------------------------------------------------------------------------**/
-    lib.processTasks = async (tasks) => {
+    lib.processTasks = async (tasks, folder) => {
         const syncedPrefs = lib.loadSyncedPrefs();
         // determine default selection - use current or assigned project if applicbale, otherwise use the last selected section
         const currentProject = tasks[0].containingProject;
@@ -21,7 +21,7 @@
                 tasks[0].assignedContainer
                 : lastSelectedSection;
         /*------- Prompt for section (if enabled) -------*/
-        const section = (lib.promptForProject()) ? await lib.promptForSection(defaultSelection) : null;
+        const section = (lib.promptForProject()) ? await lib.promptForSection(defaultSelection, folder) : null;
         /*------- Prompt for tag(s) (if enabled and no tags) -------*/
         if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0))
             await lib.promptForTags(tasks);
@@ -51,9 +51,9 @@
                 await lib.moveTasks(tasks, actionGroupSelection, setPosition);
         }
     };
-    lib.promptForSection = async (defaultSelection) => {
+    lib.promptForSection = async (defaultSelection, folder) => {
         const syncedPrefs = lib.loadSyncedPrefs();
-        const sectionForm = lib.sectionForm(defaultSelection);
+        const sectionForm = lib.sectionForm(defaultSelection, folder);
         await sectionForm.show('Select a project or folder', 'Continue');
         const section = sectionForm.values.menuItem;
         if (section === 'New project') {
@@ -219,9 +219,10 @@
         form.addField(new Form.Field.Checkbox('another', 'Add another?', false), null);
         return form;
     };
-    lib.sectionForm = (defaultSelection) => {
+    lib.sectionForm = (defaultSelection, folder) => {
         const fuzzySearchLib = lib.getFuzzySearchLib();
-        const activeSections = flattenedSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
+        const relevantSections = folder ? folder.flattenedSections : flattenedSections;
+        const activeSections = relevantSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
         const defaultSelected = activeSections.includes(defaultSelection) ? defaultSelection : null;
         return fuzzySearchLib.searchForm([...activeSections, 'New project'], [...activeSections.map(p => p.name), 'New project'], defaultSelected, null); // TODO: return fuzzy matching for projects and folders
     };
@@ -288,6 +289,12 @@
             await document.newTabOnWindow(document.windows[0]); // new tab - only Mac supported
         URL.fromString('omnifocus:///task/' + task.containingProject.id.primaryKey).open();
         URL.fromString('omnifocus:///task/' + task.id.primaryKey).open();
+    };
+    lib.promptForFolder = async () => {
+        const fuzzySearchLib = lib.getFuzzySearchLib();
+        const folderForm = fuzzySearchLib.activeFoldersFuzzySearchForm();
+        await folderForm.show('Select a folder', 'Continue');
+        return folderForm.values.menuItem;
     };
     // #endregion
     return lib;

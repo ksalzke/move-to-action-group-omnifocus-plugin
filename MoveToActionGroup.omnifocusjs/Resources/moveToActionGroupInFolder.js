@@ -1,9 +1,9 @@
-/* global PlugIn Alert Form moveTasks Task save projectsMatching tagsMatching Preferences deleteObject */
 (() => {
     const action = new PlugIn.Action(async (selection) => {
         const lib = this.libraries[0];
         const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)];
-        lib.processTasks(tasks, null);
+        const folder = await lib.promptForFolder();
+        await lib.processTasks(tasks, folder);
     });
     action.validate = (selection) => {
         // valid if tasks are selected and they all belong to the same project/assigned project

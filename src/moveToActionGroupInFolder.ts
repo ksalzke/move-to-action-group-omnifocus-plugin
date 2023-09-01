@@ -1,11 +1,12 @@
-/* global PlugIn Alert Form moveTasks Task save projectsMatching tagsMatching Preferences deleteObject */
 (() => {
   const action = new PlugIn.Action(async (selection: Selection) => {
 
     const lib = this.libraries[0]
     const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)]
 
-    lib.processTasks(tasks, null)
+    const folder = await lib.promptForFolder()
+
+    await lib.processTasks(tasks, folder)
 
   })
 
