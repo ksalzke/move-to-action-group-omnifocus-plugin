@@ -115,12 +115,12 @@ interface ActionGroupLib extends PlugIn.Library {
   tagForm?: () => TagForm
   sectionForm?: (defaultSelection: Project | Folder, folder: Folder | null) => SectionForm
   newProjectForm?: () => NewProjectForm
-  actionGroupForm?: (project: Project) => Promise<ActionGroupForm>
+  actionGroupForm?: (section: Project | Folder) => Promise<ActionGroupForm>
   positionForm?: (group: Task | Project) => PositionForm
   newActionGroupForm?: () => NewActionGroupForm
 
   // other helper functions
-  potentialActionGroups?: (proj: Project | null) => Promise<Task[]>
+  potentialActionGroups?: (section: Project | Folder | null) => Promise<Task[]>
   goTo?: (task: Task) => Promise<void>
   promptForFolder?: () => Promise<Folder>
 }
@@ -152,10 +152,10 @@ interface ActionGroupLib extends PlugIn.Library {
 
 
     /*======= Prompt for folder (if relevant) =======*/
-    const folder = (promptForFolder) ? await lib.promptForFolder() : null
+    const folder = (promptForFolder) ? await lib.promptForFolder() : null // folder: Omni Automation
 
     /*------- Prompt for section (if enabled) -------*/
-    const section: null | Project | Folder = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null
+    const section: null | Project | Folder = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null // section: Omni Automation
 
     /*------- Prompt for tag(s) (if enabled and no tags) -------*/
     if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0)) await lib.promptForTags(tasks)
@@ -169,7 +169,8 @@ interface ActionGroupLib extends PlugIn.Library {
     }
 
     /*------- Otherwise, prompt for action group based on project -------*/
-    const actionGroupForm = await lib.actionGroupForm(section)
+    const filter = section || folder
+    const actionGroupForm = await lib.actionGroupForm(filter)
     await actionGroupForm.show('Select Action Group', 'OK')
 
     const actionGroupSelection: Task | 'New action group' | 'Add to root of project' = actionGroupForm.values.menuItem
@@ -185,9 +186,10 @@ interface ActionGroupLib extends PlugIn.Library {
         await lib.moveTasks(tasks, section, setPosition)
         break
       default:
-        if (actionGroupSelection.project) {
+        if (actionGroupSelection.project || actionGroupSelection instanceof Project) {
+          const project = actionGroupSelection instanceof Project ? actionGroupSelection : actionGroupSelection.project
           // selected item was a project
-          const secondActionGroupForm = await lib.actionGroupForm(actionGroupSelection.project)
+          const secondActionGroupForm = await lib.actionGroupForm(project)
           await secondActionGroupForm.show('Select Action Group', 'OK')
           await lib.moveTasks(tasks, secondActionGroupForm.values.menuItem, secondActionGroupForm.values.setPosition)
         } else {
@@ -401,9 +403,9 @@ interface ActionGroupLib extends PlugIn.Library {
     return newProjectForm
   }
 
-  lib.actionGroupForm = async (proj: Project): Promise<ActionGroupForm> => {
+  lib.actionGroupForm = async (section: Project | Folder): Promise<ActionGroupForm> => {
     const fuzzySearchLib = lib.getFuzzySearchLib()
-    const groups = await lib.potentialActionGroups(proj)
+    const groups = await lib.potentialActionGroups(section)
 
     const additionalOptions = ['Add to root of project', 'New action group']
 
@@ -444,13 +446,13 @@ interface ActionGroupLib extends PlugIn.Library {
 
   /*------------------ Other Helper Functions -----------------*/
 
-  lib.potentialActionGroups = async (proj: Project | null): Promise<Task[]> => {
+  lib.potentialActionGroups = async (section: Project | Folder | null): Promise<Task[]> => {
     const tag = await lib.getPrefTag('actionGroupTag')
 
-    const allTasks = (proj === null) ? flattenedTasks : proj.flattenedTasks
+    const allTasks = (section === null) ? flattenedTasks : (section instanceof Project ? section.flattenedTasks : [...section.flattenedProjects].flatMap(proj => [proj, ...proj.flattenedTasks]))
 
     const allActionGroups = allTasks.filter(task => {
-      if (task.project !== null && proj !== null) return false
+      if (task.project !== null && section instanceof Project) return false // exclude project task if project is used for filtering (leave if folder)
       if (task.tags.includes(tag)) return true
       if (lib.autoInclude() === 'all tasks') return true
       if (lib.autoInclude() === 'all' && task.hasChildren) return true

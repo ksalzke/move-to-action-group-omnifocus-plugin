@@ -21,9 +21,9 @@
                 tasks[0].assignedContainer
                 : lastSelectedSection;
         /*======= Prompt for folder (if relevant) =======*/
-        const folder = (promptForFolder) ? await lib.promptForFolder() : null;
+        const folder = (promptForFolder) ? await lib.promptForFolder() : null; // folder: Omni Automation
         /*------- Prompt for section (if enabled) -------*/
-        const section = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null;
+        const section = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null; // section: Omni Automation
         /*------- Prompt for tag(s) (if enabled and no tags) -------*/
         if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0))
             await lib.promptForTags(tasks);
@@ -36,7 +36,8 @@
             return;
         }
         /*------- Otherwise, prompt for action group based on project -------*/
-        const actionGroupForm = await lib.actionGroupForm(section);
+        const filter = section || folder;
+        const actionGroupForm = await lib.actionGroupForm(filter);
         await actionGroupForm.show('Select Action Group', 'OK');
         const actionGroupSelection = actionGroupForm.values.menuItem;
         const setPosition = actionGroupForm.values.setPosition;
@@ -50,9 +51,10 @@
                 await lib.moveTasks(tasks, section, setPosition);
                 break;
             default:
-                if (actionGroupSelection.project) {
+                if (actionGroupSelection.project || actionGroupSelection instanceof Project) {
+                    const project = actionGroupSelection instanceof Project ? actionGroupSelection : actionGroupSelection.project;
                     // selected item was a project
-                    const secondActionGroupForm = await lib.actionGroupForm(actionGroupSelection.project);
+                    const secondActionGroupForm = await lib.actionGroupForm(project);
                     await secondActionGroupForm.show('Select Action Group', 'OK');
                     await lib.moveTasks(tasks, secondActionGroupForm.values.menuItem, secondActionGroupForm.values.setPosition);
                 }
@@ -235,9 +237,9 @@
         newProjectForm.addField(new Form.Field.String('projectName', 'Project Name', null, null), null);
         return newProjectForm;
     };
-    lib.actionGroupForm = async (proj) => {
+    lib.actionGroupForm = async (section) => {
         const fuzzySearchLib = lib.getFuzzySearchLib();
-        const groups = await lib.potentialActionGroups(proj);
+        const groups = await lib.potentialActionGroups(section);
         const additionalOptions = ['Add to root of project', 'New action group'];
         const formOptions = [...groups, ...additionalOptions];
         const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions];
@@ -268,12 +270,12 @@
         return form;
     };
     /*------------------ Other Helper Functions -----------------*/
-    lib.potentialActionGroups = async (proj) => {
+    lib.potentialActionGroups = async (section) => {
         const tag = await lib.getPrefTag('actionGroupTag');
-        const allTasks = (proj === null) ? flattenedTasks : proj.flattenedTasks;
+        const allTasks = (section === null) ? flattenedTasks : (section instanceof Project ? section.flattenedTasks : [...section.flattenedProjects].flatMap(proj => [proj, ...proj.flattenedTasks]));
         const allActionGroups = allTasks.filter(task => {
-            if (task.project !== null && proj !== null)
-                return false;
+            if (task.project !== null && section instanceof Project)
+                return false; // exclude project task if project is used for filtering (leave if folder)
             if (task.tags.includes(tag))
                 return true;
             if (lib.autoInclude() === 'all tasks')

@@ -18,6 +18,10 @@
       "image": "arrow.right.square"
     },
     {
+      "identifier": "moveToActionGroupInFolderSkipProj",
+      "image": "arrow.right.square.fill"
+    },
+    {
       "identifier": "goToLastMoved",
       "image": "backward.fill"
     },
