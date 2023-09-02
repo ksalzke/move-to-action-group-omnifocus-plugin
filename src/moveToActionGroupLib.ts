@@ -210,6 +210,8 @@ interface ActionGroupLib extends PlugIn.Library {
         location.note = location.note + '\n- ' + task.name
         deleteObject(task)
       }
+      // store last moved task as preference
+      preferences.write('lastMovedID', location.id.primaryKey)
     } else {
       await lib.moveTasks(tasks, location)
     }
@@ -354,7 +356,7 @@ interface ActionGroupLib extends PlugIn.Library {
       return await lib.promptForLocation(newActionGroup, updatedMoveDetails)
     }
 
-    else if (form.values.appendAsNote) return { location: actionGroup, moveDetails: updatedMoveDetails } // processed in main function
+    else if (form.values.appendAsNote) return { location: form.values.taskLocation, moveDetails: updatedMoveDetails } // processed in main function
 
     else return { location: form.values.taskLocation.ending, moveDetails: updatedMoveDetails }
 
