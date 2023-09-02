@@ -68,6 +68,8 @@ interface ActionGroupForm extends Form {
     textInput?: string
     menuItem?: any
     setPosition?: boolean
+    promptForDeferDate?: boolean
+    promptForDueDate?: boolean
   }
 }
 
@@ -75,6 +77,8 @@ interface PositionForm extends Form {
   values: {
     taskLocation?: 'beginning' | 'new' | Task
     appendAsNote?: boolean
+    setDeferDate?: boolean
+    setDueDate?: boolean
   }
 }
 
@@ -83,7 +87,23 @@ interface NewActionGroupForm extends Form {
     groupName?: string
     completeWithLast?: boolean
     tagNewGroup?: boolean
+    promptForDeferDate?: boolean
+    promptForDueDate?: boolean
   }
+}
+
+interface DateForm extends Form {
+  values: {
+    date?: Date
+  }
+}
+
+/*================== Other =================*/
+
+type MoveDetails = {
+  setPosition: boolean
+  setDeferDate: boolean
+  setDueDate: boolean
 }
 
 //#endregion
@@ -95,9 +115,10 @@ interface ActionGroupLib extends PlugIn.Library {
   processTasks?: (tasks: Task[], promptForProject: boolean, promptForFolder: boolean) => Promise<void>
   promptForSection?: (defaultSelection: Project | Folder, folder: Folder | null) => Promise<Project | Folder>
   promptForTags?: (tasks: Task[]) => Promise<void>
-  createActionGroupAndMoveTasks?: (tasks: Task[], location: Task | Project) => Promise<void>
-  moveTasks?: (tasks: Task[], location: Project | Task, setPosition: boolean) => Promise<void>
-  promptForLocation?: (tasks: Task[], group: Task | Project) => Promise<Task | Task.ChildInsertionLocation>
+  promptForActionGroup?: (filter: Project | Folder | null, moveDetails: MoveDetails) => Promise<{ actionGroup: Task, moveDetails: MoveDetails }>
+  createActionGroup?: (location: Task | Project, moveDetails: MoveDetails) => Promise<Task>
+  moveTasks?: (tasks: Task[], location: Task.ChildInsertionLocation) => Promise<void>
+  promptForLocation?: (group: Task | Project, moveDetails: MoveDetails) => Promise<{ location: Task | Task.ChildInsertionLocation, moveDetails: MoveDetails }>
 
   // get other libraries
   loadSyncedPrefs?: () => SyncedPref
@@ -115,9 +136,10 @@ interface ActionGroupLib extends PlugIn.Library {
   tagForm?: () => TagForm
   sectionForm?: (defaultSelection: Project | Folder, folder: Folder | null) => SectionForm
   newProjectForm?: () => NewProjectForm
-  actionGroupForm?: (section: Project | Folder) => Promise<ActionGroupForm>
-  positionForm?: (group: Task | Project) => PositionForm
-  newActionGroupForm?: () => NewActionGroupForm
+  actionGroupForm?: (section: Project | Folder, moveDetails: MoveDetails) => Promise<ActionGroupForm>
+  positionForm?: (group: Task | Project, moveDetails: MoveDetails) => PositionForm
+  newActionGroupForm?: (moveDetails: MoveDetails) => NewActionGroupForm
+  dateForm?: () => DateForm
 
   // other helper functions
   potentialActionGroups?: (section: Project | Folder | null) => Promise<Task[]>
@@ -160,7 +182,7 @@ interface ActionGroupLib extends PlugIn.Library {
     /*------- Prompt for section (if enabled) -------*/
     const section: null | Project | Folder = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null // section: Omni Automation
 
-    /*------- Create new project if folder selected -------*/
+    /*------- Create new project if folder selected (and move and stop) -------*/
     if (section instanceof Folder) {
       const location = lib.moveToTopOfFolder() ? section.beginning : section.ending
       const newProjects = convertTasksToProjects(tasks, location)
@@ -168,34 +190,40 @@ interface ActionGroupLib extends PlugIn.Library {
       return
     }
 
-    /*------- Otherwise, prompt for action group based on project -------*/
-    const filter = section || folder
-    const actionGroupForm = await lib.actionGroupForm(filter)
-    await actionGroupForm.show('Select Action Group', 'OK')
+    /*------- Otherwise, prompt for action group based on project/folder -------*/
+    const actionGroupResult = await lib.promptForActionGroup(section, { setPosition: false, setDeferDate: false, setDueDate: false })
+    const actionGroup = actionGroupResult.actionGroup
+    let moveDetails = actionGroupResult.moveDetails
 
-    const actionGroupSelection: Task | 'New action group' | 'Add to root of project' = actionGroupForm.values.menuItem
-    const setPosition = actionGroupForm.values.setPosition
+    /*------- If selected, show the 'set position' dialogue -------*/
+    let location = actionGroup.ending
+    if (moveDetails.setPosition) {
+      const locationResult = await lib.promptForLocation(actionGroup, moveDetails)
+      location = locationResult.location
+      moveDetails = locationResult.moveDetails
+    }
 
-    /*------- Create destination (if needed) and move -------*/
-    // position is also set as part of moveTasks function
-    switch (actionGroupSelection) {
-      case 'New action group':
-        await lib.createActionGroupAndMoveTasks(tasks, section)
-        break
-      case 'Add to root of project':
-        await lib.moveTasks(tasks, section, setPosition)
-        break
-      default:
-        if (actionGroupSelection.project || actionGroupSelection instanceof Project) {
-          const project = actionGroupSelection instanceof Project ? actionGroupSelection : actionGroupSelection.project
-          // selected item was a project
-          const secondActionGroupForm = await lib.actionGroupForm(project)
-          await secondActionGroupForm.show('Select Action Group', 'OK')
-          await lib.moveTasks(tasks, secondActionGroupForm.values.menuItem, secondActionGroupForm.values.setPosition)
-        } else {
-          // selected item was a task
-          await lib.moveTasks(tasks, actionGroupSelection, setPosition)
-        }
+    /*------- Move to destination (append to note if required) -------*/
+    if (location instanceof Task) {
+      // this means that 'append as note' has been selected
+      for (const task of tasks) {
+        location.note = location.note + '\n- ' + task.name
+        deleteObject(task)
+      }
+    } else {
+      await lib.moveTasks(tasks, location)
+    }
+
+    /*------- Set dates if required -------*/
+    if (moveDetails.setDeferDate) {
+      const deferDateForm = lib.dateForm()
+      await deferDateForm.show('Defer Date', 'Set')
+      for (const task of tasks) task.deferDate = deferDateForm.values.date
+    }
+    if (moveDetails.setDueDate) {
+      const dueDateForm = lib.dateForm()
+      await dueDateForm.show('Due Date', 'Set')
+      for (const task of tasks) task.dueDate = dueDateForm.values.date
     }
   }
 
@@ -238,64 +266,98 @@ interface ActionGroupLib extends PlugIn.Library {
     } while (form.values.another)
   }
 
-  lib.createActionGroupAndMoveTasks = async (tasks: Task[], location: Task | Project) => {
-    // create action group
-    const newActionGroupForm = lib.newActionGroupForm()
-    await newActionGroupForm.show('Action Group Name', 'Create')
-    location = new Task(newActionGroupForm.values.groupName, location)
-    location.completedByChildren = newActionGroupForm.values.completeWithLast
+  lib.promptForActionGroup = async (filter: Project | Folder | null): Promise<{ actionGroup: Task, moveDetails: MoveDetails }> => {
+    const actionGroupForm = await lib.actionGroupForm(filter, { setPosition: false, setDeferDate: false, setDueDate: false })
+    await actionGroupForm.show('Select Action Group', 'OK')
 
-    const tag = await lib.getPrefTag('actionGroupTag')
-    if (newActionGroupForm.values.tagNewGroup) location.addTag(tag)
+    let actionGroupSelection: Task | 'New action group' | 'Add to root of project' = actionGroupForm.values.menuItem
 
-    // move task to new action group
-    await lib.moveTasks(tasks, location, false)
+    let newActionGroup: Task
+    const moveDetails: MoveDetails = {
+      setPosition: actionGroupForm.values.setPosition,
+      setDeferDate: actionGroupForm.values.promptForDeferDate,
+      setDueDate: actionGroupForm.values.promptForDueDate
+    }
 
+    if (actionGroupSelection === 'New action group' && filter instanceof Project) {
+      newActionGroup = await lib.createActionGroup(filter, moveDetails)
+    }
+
+    // repeat if selection is a project
+    else if (actionGroupSelection instanceof Task && actionGroupSelection.project || actionGroupSelection instanceof Project) {
+      const project = actionGroupSelection instanceof Project ? actionGroupSelection : actionGroupSelection.project
+      return await lib.promptForActionGroup(project, moveDetails)
+    }
+
+    // if selection is 'Add to root of project', return project
+    else if (actionGroupSelection === 'Add to root of project' && filter instanceof Project) {
+      newActionGroup = filter.task
+    }
+
+    else if (actionGroupSelection instanceof Task) newActionGroup = actionGroupSelection
+
+    return {
+      actionGroup: newActionGroup,
+      moveDetails: {
+        setPosition: actionGroupForm.values.setPosition,
+        setDeferDate: actionGroupForm.values.promptForDeferDate,
+        setDueDate: actionGroupForm.values.promptForDueDate
+      }
+    }
   }
 
-  lib.moveTasks = async (tasks, location, setPosition) => {
-    const loc: Task.ChildInsertionLocation | 'new' | 'appended as note' = setPosition ? await lib.promptForLocation(tasks, location) : location.ending
 
-    switch (loc) {
-      case 'new':
-        await lib.createActionGroupAndMoveTasks(tasks, location)
-        break
-      case 'appended as note':
-        break
-      default:
-        // clear any existing tags
-        const tag = await lib.getPrefTag('actionGroupTag')
-        const inheritTags = lib.inheritTags()
-        const hasExistingTags = tasks.map(task => task.tags.length > 0)
-        moveTasks(tasks, loc)
-        save()
-        for (let i = 0; i < tasks.length; i++) {
-          if (!hasExistingTags[i]) tasks[i].removeTag(tag)
-          if (!hasExistingTags[i] && !inheritTags) tasks[i].clearTags()
-        }
-        break
+
+  lib.createActionGroup = async (newActionGroup: Task | Project, moveDetails: MoveDetails): Promise<Task> => {
+    // create action group
+    const newActionGroupForm = lib.newActionGroupForm(moveDetails)
+    await newActionGroupForm.show('Action Group Name', 'Create')
+    newActionGroup = new Task(newActionGroupForm.values.groupName, newActionGroup)
+    newActionGroup.completedByChildren = newActionGroupForm.values.completeWithLast
+
+    const tag = await lib.getPrefTag('actionGroupTag')
+    if (newActionGroupForm.values.tagNewGroup) newActionGroup.addTag(tag)
+
+    return newActionGroup
+  }
+
+  lib.moveTasks = async (tasks: Task[], location: Task.ChildInsertionLocation) => {
+    // clear any existing tags
+    const tag = await lib.getPrefTag('actionGroupTag')
+    const inheritTags = lib.inheritTags()
+    const hasExistingTags = tasks.map(task => task.tags.length > 0)
+    moveTasks(tasks, location)
+    save()
+    for (let i = 0; i < tasks.length; i++) {
+      if (!hasExistingTags[i]) tasks[i].removeTag(tag)
+      if (!hasExistingTags[i] && !inheritTags) tasks[i].clearTags()
     }
 
     // store last moved task as preference
     preferences.write('lastMovedID', tasks[0].id.primaryKey)
   }
 
-  lib.promptForLocation = async (tasks: Task[], group: Task | Project): Promise<Task.ChildInsertionLocation | 'new' | 'appended as note'> => {
-    const form = lib.positionForm(group)
+  lib.promptForLocation = async (actionGroup: Task, moveDetails: MoveDetails): Promise<{ location: Task.ChildInsertionLocation | Task, moveDetails: MoveDetails }> => {
+    const form = lib.positionForm(actionGroup, moveDetails)
     await form.show('Task Location', 'Move')
 
-    if (form.values.taskLocation === 'new') return 'new'
-    else if (form.values.taskLocation === 'beginning') return group.beginning
-
-    if (form.values.appendAsNote) {
-      for (const task of tasks) {
-        form.values.taskLocation.note = form.values.taskLocation.note + '\n- ' + task.name
-        deleteObject(task)
-        return 'appended as note'
-      }
+    let updatedMoveDetails: MoveDetails = {
+      setPosition: false,
+      setDeferDate: form.values.setDeferDate,
+      setDueDate: form.values.setDueDate
     }
 
-    return form.values.taskLocation.after
+    if (form.values.taskLocation === 'beginning') return { location: actionGroup.beginning, moveDetails: updatedMoveDetails }
+
+    else if (form.values.taskLocation === 'new') {
+      const newActionGroup = await lib.createActionGroup(actionGroup, updatedMoveDetails)
+      return await lib.promptForLocation(newActionGroup, updatedMoveDetails)
+    }
+
+    else if (form.values.appendAsNote) return { location: actionGroup, moveDetails: updatedMoveDetails } // processed in main function
+
+    else return { location: form.values.taskLocation.ending, moveDetails: updatedMoveDetails }
+
   }
 
   // #region Helper Functions
@@ -403,7 +465,7 @@ interface ActionGroupLib extends PlugIn.Library {
     return newProjectForm
   }
 
-  lib.actionGroupForm = async (section: Project | Folder): Promise<ActionGroupForm> => {
+  lib.actionGroupForm = async (section: Project | Folder, moveDetails: MoveDetails): Promise<ActionGroupForm> => {
     const fuzzySearchLib = lib.getFuzzySearchLib()
     const groups = await lib.potentialActionGroups(section)
 
@@ -413,10 +475,12 @@ interface ActionGroupLib extends PlugIn.Library {
     const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions]
     const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, formOptions[0], null)
     searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null)
+    searchForm.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null)
+    searchForm.addField(new Form.Field.Checkbox('promptForDueDate', 'Set Due Date', moveDetails.setDueDate), null)
     return searchForm
   }
 
-  lib.positionForm = (group): PositionForm => {
+  lib.positionForm = (group: Task, moveDetails: MoveDetails): PositionForm => {
     const form = new Form()
     const remainingChildren = group.children.filter(child => child.taskStatus === Task.Status.Available || child.taskStatus === Task.Status.Blocked)
     form.addField(new Form.Field.Option(
@@ -427,6 +491,8 @@ interface ActionGroupLib extends PlugIn.Library {
       remainingChildren[remainingChildren.length - 1] || 'beginning',
       null), null)
     form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false), null)
+    form.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null)
+    form.addField(new Form.Field.Checkbox('promptForDueDate', 'Set Due Date', moveDetails.setDueDate), null)
 
     form.validate = (form: PositionForm) => {
       if (form.values.appendAsNote && form.values.taskLocation === 'beginning') return false // can't append to non-existant task
@@ -436,11 +502,19 @@ interface ActionGroupLib extends PlugIn.Library {
     return form
   }
 
-  lib.newActionGroupForm = (): NewActionGroupForm => {
+  lib.newActionGroupForm = (moveDetails: MoveDetails): NewActionGroupForm => {
     const form: NewActionGroupForm = new Form()
     form.addField(new Form.Field.String('groupName', 'Group Name', null, null), null)
     form.addField(new Form.Field.Checkbox('completeWithLast', 'Complete with last action', settings.boolForKey('OFMCompleteWhenLastItemComplete')), null)
     form.addField(new Form.Field.Checkbox('tagNewGroup', 'Apply action group tag', lib.autoInclude() === 'none'), null)
+    form.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null)
+    form.addField(new Form.Field.Checkbox('promptForDueDate', 'Set Due Date', moveDetails.setDueDate), null)
+    return form
+  }
+
+  lib.dateForm = (): DateForm => {
+    const form = new Form()
+    form.addField(new Form.Field.Date('date', 'Defer Date', null, null), null)
     return form
   }
 
