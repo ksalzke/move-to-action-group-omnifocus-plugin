@@ -229,9 +229,9 @@ interface ActionGroupLib extends PlugIn.Library {
     }
   }
 
-  lib.promptForSection = async (defaultSelection: Project | Folder, folder: Folder | null): Promise<Project | Folder> => {
+  lib.promptForSection = async (defaultSelection: Project | Folder, folderFilter: Folder | null): Promise<Project | Folder> => {
     const syncedPrefs = lib.loadSyncedPrefs()
-    const sectionForm = lib.sectionForm(defaultSelection, folder)
+    const sectionForm = lib.sectionForm(defaultSelection, folderFilter)
     await sectionForm.show('Select a project or folder', 'Continue')
     const section = sectionForm.values.menuItem
 
@@ -240,9 +240,14 @@ interface ActionGroupLib extends PlugIn.Library {
       await newProjectForm.show('New Project Name', 'Continue')
 
       const folderForm = lib.getFuzzySearchLib().activeFoldersFuzzySearchForm()
-      await folderForm.show('Select a folder', 'Continue')
+      let folder: Folder
+      if (folderFilter) folder = folderFilter
+      else {
+        await folderForm.show('Select a folder', 'Continue')
+        folder = folderForm.values.menuItem
+      }
 
-      const location = lib.moveToTopOfFolder() ? folderForm.values.menuItem.beginning : folderForm.values.menuItem.ending
+      const location = lib.moveToTopOfFolder() ? folder.beginning : folder.ending
       const newProject = new Project(newProjectForm.values.projectName, location)
       newProject.addTag(lib.prefTag('newProjectTag')) // TODO: stop being inherited by task
       return newProject

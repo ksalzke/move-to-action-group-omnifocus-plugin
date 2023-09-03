@@ -73,17 +73,23 @@
                 task.dueDate = dueDateForm.values.date;
         }
     };
-    lib.promptForSection = async (defaultSelection, folder) => {
+    lib.promptForSection = async (defaultSelection, folderFilter) => {
         const syncedPrefs = lib.loadSyncedPrefs();
-        const sectionForm = lib.sectionForm(defaultSelection, folder);
+        const sectionForm = lib.sectionForm(defaultSelection, folderFilter);
         await sectionForm.show('Select a project or folder', 'Continue');
         const section = sectionForm.values.menuItem;
         if (section === 'New project') {
             const newProjectForm = lib.newProjectForm();
             await newProjectForm.show('New Project Name', 'Continue');
             const folderForm = lib.getFuzzySearchLib().activeFoldersFuzzySearchForm();
-            await folderForm.show('Select a folder', 'Continue');
-            const location = lib.moveToTopOfFolder() ? folderForm.values.menuItem.beginning : folderForm.values.menuItem.ending;
+            let folder;
+            if (folderFilter)
+                folder = folderFilter;
+            else {
+                await folderForm.show('Select a folder', 'Continue');
+                folder = folderForm.values.menuItem;
+            }
+            const location = lib.moveToTopOfFolder() ? folder.beginning : folder.ending;
             const newProject = new Project(newProjectForm.values.projectName, location);
             newProject.addTag(lib.prefTag('newProjectTag')); // TODO: stop being inherited by task
             return newProject;
