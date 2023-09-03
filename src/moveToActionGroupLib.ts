@@ -358,7 +358,7 @@ interface ActionGroupLib extends PlugIn.Library {
 
     else if (form.values.appendAsNote) return { location: form.values.taskLocation, moveDetails: updatedMoveDetails } // processed in main function
 
-    else return { location: form.values.taskLocation.ending, moveDetails: updatedMoveDetails }
+    else return { location: form.values.taskLocation.after, moveDetails: updatedMoveDetails }
 
   }
 
@@ -489,7 +489,7 @@ interface ActionGroupLib extends PlugIn.Library {
       'taskLocation',
       'Insert after',
       ['beginning', ...remainingChildren, 'new'],
-      ['(beginning)', ...remainingChildren.map(child => child.name), 'New action group'],
+      ['(beginning)', ...remainingChildren.slice(0, -1).map(child => child.name), remainingChildren[remainingChildren.length - 1].name + ' (ending)', 'New action group'],
       remainingChildren[remainingChildren.length - 1] || 'beginning',
       null), null)
     form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false), null)
