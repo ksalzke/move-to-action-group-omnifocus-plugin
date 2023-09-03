@@ -472,7 +472,7 @@ interface ActionGroupLib extends PlugIn.Library {
     return newProjectForm
   }
 
-  lib.actionGroupForm = async (section: Project | Folder, moveDetails: MoveDetails): Promise<ActionGroupForm> => {
+  lib.actionGroupForm = async (section: Project | Folder | null, moveDetails: MoveDetails): Promise<ActionGroupForm> => {
     const fuzzySearchLib = lib.getFuzzySearchLib()
     const groups = await lib.potentialActionGroups(section)
 
@@ -537,8 +537,8 @@ interface ActionGroupLib extends PlugIn.Library {
       if (task.tags.includes(tag)) return true
       if (lib.autoInclude() === 'all tasks') return true
       if (lib.autoInclude() === 'all' && task.hasChildren) return true
-      if (lib.autoInclude() === 'top' && task.hasChildren && task.parent.project !== null) return true
-      else return false
+      if (lib.autoInclude() === 'top' && task.hasChildren && task.parent?.project !== null) return true
+      return false
     })
 
     const availableActionGroups = allActionGroups.filter(task => ![Task.Status.Completed, Task.Status.Dropped].includes(task.taskStatus))

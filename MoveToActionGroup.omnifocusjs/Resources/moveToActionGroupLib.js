@@ -333,10 +333,9 @@
                 return true;
             if (lib.autoInclude() === 'all' && task.hasChildren)
                 return true;
-            if (lib.autoInclude() === 'top' && task.hasChildren && task.parent.project !== null)
+            if (lib.autoInclude() === 'top' && task.hasChildren && task.parent?.project !== null)
                 return true;
-            else
-                return false;
+            return false;
         });
         const availableActionGroups = allActionGroups.filter(task => ![Task.Status.Completed, Task.Status.Dropped].includes(task.taskStatus));
         return availableActionGroups;
