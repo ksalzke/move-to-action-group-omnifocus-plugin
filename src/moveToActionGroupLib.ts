@@ -475,7 +475,7 @@ interface ActionGroupLib extends PlugIn.Library {
 
     const formOptions = [...groups, ...additionalOptions]
     const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions]
-    const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, formOptions[0], null)
+    const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, 'Add to root of project', null)
     searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null)
     searchForm.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null)
     searchForm.addField(new Form.Field.Checkbox('promptForDueDate', 'Set Due Date', moveDetails.setDueDate), null)
