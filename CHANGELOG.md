@@ -1,3 +1,38 @@
+# [4.0.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.7.1...v4.0.0) (2023-09-03)
+
+
+### Bug Fixes
+
+* :bug: allow for selection of project when skipping project dialogues ([bf296c5](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/bf296c57a39cd1516f6f72502da29e863f50c987))
+* :bug: fix bug in potentialActionGroups for projects ([44c53f2](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/44c53f2fda3b382a88545e900b145ab5cd7382f8))
+* :bug: fix bug where note was appended to wrong task ([d7e3b63](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/d7e3b63d84e48ffb0a69af8a42bd43c1cbe21058))
+* :bug: fix bug where task was added inside selected task when setting position (instead of after) and add '(ending)' marker ([a0b3d9c](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/a0b3d9ccafcaa22402b069c1eaba3478ad451634))
+* :bug: show project dialogue after folder dialogue is shown ([4e776fc](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/4e776fc7a92ae8ba3f045b316384abc2f3196da7))
+
+
+### Features
+
+* :lipstick: make 'add to root of project' default selection ([827c9b0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/827c9b0e9dbbf1b18259278dfa9c95f03e1c8480))
+* :lipstick: modify dialogue order so tags come first ([763bd51](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/763bd51bc695ca7942da75b695d05ac8a598d53c))
+* :lipstick: move 'special' options to top of dialogues ([5c58b1b](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/5c58b1b1e2b646cae3e1df689a10d1be9d09941f))
+* :sparkles: add 'Move To Action Group In Folder (Skip Project Selection)' ([c436b17](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/c436b176055c9f9c8df88ddccdb5c7ede17424da))
+* :sparkles: add 'Move To Action Group In Folder' action (limits action groups by selected folder) ([7e108a6](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/7e108a69e4c2a44cbede75214256380385be6af4))
+* :sparkles: add 'set defer date' and 'set due date' options ([7539e06](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/7539e06c5dec594f29bdad01d68844299a927a4a))
+* :sparkles: add ability to 'add project' to move to ([0e0c7b9](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/0e0c7b99735d1cff54d88132e78dbf1564c41459))
+* :sparkles: Add action to move directly to action group, without project prompt ([1b258b0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/1b258b00b1c9f4df0f6d64b657edfd21985c7675))
+* :sparkles: add folders to 'project' dialogue (task is added to selected folder) ([616a1bd](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/616a1bd25a7ab4191b389fb72ba87aec3e0e8967))
+* :sparkles: add preference for new project tag to be applied automatically ([d7cfbb0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/d7cfbb0728bf18b34e388d36151522e141ad683c))
+* :sparkles: add preference to move to top (rather than end) of folder when creating project ([a214346](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/a214346df424108a6cd48a6754ddf1a1572b1274))
+* :sparkles: change default selection: use current or assigned project if applicable, otherwise last used ([4a8090c](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/4a8090c9acf2bb56a702da4903b20e11b1bda469))
+* :sparkles: don't show folder selection when creating new project if already filtered by folder ([0253b5d](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/0253b5d037b6478b828d879c72a54754485552f2))
+
+
+### BREAKING CHANGES
+
+* projectPrompt preference has been removed and various changes made to all functions in library (across various recent commits)
+
+
+
 ## [3.7.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.7.0...v3.7.1) (2023-06-17)
 
 
