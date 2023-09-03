@@ -264,7 +264,7 @@
         const relevantSections = folder ? folder.flattenedSections : flattenedSections;
         const activeSections = relevantSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
         const defaultSelected = activeSections.includes(defaultSelection) ? defaultSelection : null;
-        return fuzzySearchLib.searchForm([...activeSections, 'New project'], [...activeSections.map(p => p.name), 'New project'], defaultSelected, null); // TODO: return fuzzy matching for projects and folders
+        return fuzzySearchLib.searchForm(['New project', ...activeSections], ['New project', ...activeSections.map(p => p.name)], defaultSelected, null); // TODO: return fuzzy matching for projects and folders
     };
     lib.newProjectForm = () => {
         const newProjectForm = new Form();
@@ -275,8 +275,8 @@
         const fuzzySearchLib = lib.getFuzzySearchLib();
         const groups = await lib.potentialActionGroups(section);
         const additionalOptions = ['Add to root of project', 'New action group'];
-        const formOptions = [...groups, ...additionalOptions];
-        const formLabels = [...groups.map(fuzzySearchLib.getTaskPath), ...additionalOptions];
+        const formOptions = [...additionalOptions, ...groups];
+        const formLabels = [...additionalOptions, ...groups.map(fuzzySearchLib.getTaskPath)];
         const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, 'Add to root of project', null);
         searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null);
         searchForm.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null);
@@ -286,7 +286,7 @@
     lib.positionForm = (group, moveDetails) => {
         const form = new Form();
         const remainingChildren = group.children.filter(child => child.taskStatus === Task.Status.Available || child.taskStatus === Task.Status.Blocked);
-        form.addField(new Form.Field.Option('taskLocation', 'Insert after', ['beginning', ...remainingChildren, 'new'], ['(beginning)', ...remainingChildren.slice(0, -1).map(child => child.name), remainingChildren[remainingChildren.length - 1].name + ' (ending)', 'New action group'], remainingChildren[remainingChildren.length - 1] || 'beginning', null), null);
+        form.addField(new Form.Field.Option('taskLocation', 'Insert after', ['beginning', 'new', ...remainingChildren], ['(beginning)', 'New action group', ...remainingChildren.slice(0, -1).map(child => child.name), remainingChildren[remainingChildren.length - 1].name + ' (ending)'], remainingChildren[remainingChildren.length - 1] || 'beginning', null), null);
         form.addField(new Form.Field.Checkbox('appendAsNote', 'Append to note', false), null);
         form.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null);
         form.addField(new Form.Field.Checkbox('promptForDueDate', 'Set Due Date', moveDetails.setDueDate), null);
