@@ -22,6 +22,10 @@
       "image": "arrow.right.square.fill"
     },
     {
+      "identifier": "appendToNote",
+      "image": "note.text.badge.plus"
+    },
+    {
       "identifier": "goToLastMoved",
       "image": "backward.fill"
     },
