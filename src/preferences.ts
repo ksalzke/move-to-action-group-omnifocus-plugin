@@ -1,6 +1,6 @@
 interface PrefForm extends Form {
   values: {
-    actionGroupTag?: Tag
+    actionGroupTags?: Tag[]
     autoInclude?: 'none' | 'top' | 'all' | 'all tasks'
     tagPrompt?: boolean
     projectPrompt?: boolean
@@ -17,7 +17,7 @@ interface PrefForm extends Form {
     const syncedPrefs = lib.loadSyncedPrefs()
 
     // get current preferences or set defaults if they don't yet exist
-    const actionGroupTag = lib.prefTag('actionGroupTag')
+    const actionGroupTags = lib.actionGroupTags()
     const autoInclude = lib.autoInclude()
     const tagPrompt = lib.tagPrompt()
     const inheritTags = lib.inheritTags()
@@ -26,20 +26,22 @@ interface PrefForm extends Form {
 
     // create and show form
     const form: PrefForm = new Form()
-    const tagNames = flattenedTags.map(t => t.name)
-    form.addField(new Form.Field.Option('actionGroupTag', 'Action Group Tag', flattenedTags, tagNames, actionGroupTag, null), null)
+    const activeFlattenedTags = flattenedTags.filter(tag => tag.status !== Tag.Status.Dropped)
+    const tagNames = activeFlattenedTags.map(t => t.name)
     form.addField(new Form.Field.Option('autoInclude', 'Automatically Include Action Groups', ['none', 'top', 'all', 'all tasks'], ['None', 'Top-Level', 'All Action Groups', 'All Tasks'], autoInclude, null), null)
     form.addField(new Form.Field.Checkbox('tagPrompt', 'Prompt for Tags', tagPrompt), null)
     form.addField(new Form.Field.Checkbox('inheritTags', 'Inherit Tags When Moving', inheritTags), null)
     form.addField(new Form.Field.Checkbox('moveToTopOfFolder', 'Move to Top of Folder When Creating Projects', moveToTopOfFolder), null)
-    const newProjectTagField = new Form.Field.Option('newProjectTag', 'New Project Tag', flattenedTags, tagNames, newProjectTag, 'None')
+    const newProjectTagField = new Form.Field.Option('newProjectTag', 'New Project Tag', activeFlattenedTags, tagNames, newProjectTag, 'None')
     newProjectTagField.allowsNull = true
     form.addField(newProjectTagField, null)
+    form.addField(new Form.Field.MultipleOptions('actionGroupTags', 'Action Group Tag(s)', activeFlattenedTags, tagNames, actionGroupTags), null)
+
 
     await form.show('Preferences: Move To Action Group', 'OK')
 
     // save preferences
-    syncedPrefs.write('actionGroupTagID', form.values.actionGroupTag.id.primaryKey)
+    syncedPrefs.write('actionGroupTags', form.values.actionGroupTags.map(tag => tag.id.primaryKey))
     syncedPrefs.write('autoInclude', form.values.autoInclude)
     syncedPrefs.write('tagPrompt', form.values.tagPrompt)
     syncedPrefs.write('inheritTags', form.values.inheritTags)

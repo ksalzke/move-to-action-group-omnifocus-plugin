@@ -231,6 +231,14 @@
         await this.action('preferences').perform();
         return lib.getPrefTag(prefTag);
     };
+    lib.actionGroupTags = () => {
+        const syncedPrefs = lib.loadSyncedPrefs();
+        const currentSetting = syncedPrefs.read('actionGroupTags');
+        if (currentSetting)
+            return currentSetting.map((id) => Tag.byIdentifier(id)).filter((tag) => tag !== null);
+        else
+            return [];
+    };
     lib.autoInclude = () => {
         const preferences = lib.loadSyncedPrefs();
         const setting = preferences.readString('autoInclude');
@@ -322,12 +330,12 @@
     };
     /*------------------ Other Helper Functions -----------------*/
     lib.potentialActionGroups = async (section) => {
-        const tag = await lib.getPrefTag('actionGroupTag');
+        const tags = lib.actionGroupTags();
         const allTasks = (section === null) ? flattenedTasks : (section instanceof Project ? section.flattenedTasks : [...section.flattenedProjects].flatMap(proj => [proj, ...proj.flattenedTasks]));
         const allActionGroups = allTasks.filter(task => {
             if (task.project !== null && section instanceof Project)
                 return false; // exclude project task if project is used for filtering (leave if folder)
-            if (task.tags.includes(tag))
+            if (task.tags.some(tag => tags.includes(tag)))
                 return true;
             if (lib.autoInclude() === 'all tasks')
                 return true;

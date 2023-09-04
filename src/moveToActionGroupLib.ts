@@ -127,6 +127,7 @@ interface ActionGroupLib extends PlugIn.Library {
   // get preferences
   prefTag?: (prefTag: string) => Tag | null
   getPrefTag?: (prefTag: string) => Promise<Tag>
+  actionGroupTags?: () => Tag[]
   autoInclude?: () => 'none' | 'top' | 'all' | 'all tasks'
   tagPrompt?: () => boolean
   inheritTags?: () => boolean
@@ -422,6 +423,13 @@ interface ActionGroupLib extends PlugIn.Library {
     return lib.getPrefTag(prefTag)
   }
 
+  lib.actionGroupTags = (): Tag[] => {
+    const syncedPrefs = lib.loadSyncedPrefs();
+    const currentSetting = syncedPrefs.read('actionGroupTags');
+    if (currentSetting) return currentSetting.map((id: string) => Tag.byIdentifier(id)).filter((tag: Tag) => tag !== null)
+    else return [];
+  }
+
   lib.autoInclude = (): 'none' | 'top' | 'all' | 'all tasks' => {
     const preferences = lib.loadSyncedPrefs()
 
@@ -528,13 +536,13 @@ interface ActionGroupLib extends PlugIn.Library {
   /*------------------ Other Helper Functions -----------------*/
 
   lib.potentialActionGroups = async (section: Project | Folder | null): Promise<Task[]> => {
-    const tag = await lib.getPrefTag('actionGroupTag')
+    const tags = lib.actionGroupTags()
 
     const allTasks = (section === null) ? flattenedTasks : (section instanceof Project ? section.flattenedTasks : [...section.flattenedProjects].flatMap(proj => [proj, ...proj.flattenedTasks]))
 
     const allActionGroups = allTasks.filter(task => {
       if (task.project !== null && section instanceof Project) return false // exclude project task if project is used for filtering (leave if folder)
-      if (task.tags.includes(tag)) return true
+      if (task.tags.some(tag => tags.includes(tag))) return true
       if (lib.autoInclude() === 'all tasks') return true
       if (lib.autoInclude() === 'all' && task.hasChildren) return true
       if (lib.autoInclude() === 'top' && task.hasChildren && task.parent?.project !== null) return true
