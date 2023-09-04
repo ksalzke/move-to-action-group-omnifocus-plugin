@@ -317,7 +317,7 @@
     };
     lib.dateForm = () => {
         const form = new Form();
-        form.addField(new Form.Field.Date('date', 'Defer Date', null, null), null);
+        form.addField(new Form.Field.Date('date', 'Date', null, null), null);
         return form;
     };
     /*------------------ Other Helper Functions -----------------*/
