@@ -1,4 +1,5 @@
-
+> [!WARNING]  
+> This plug-in has recently undergone significant changes however the README has not yet been updated to reflect these. Please reach out if you have any questions, and in the meantime I will update this as soon as possible.
 
 # About
 
