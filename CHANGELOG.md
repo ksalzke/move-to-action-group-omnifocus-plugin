@@ -1,3 +1,20 @@
+# [4.1.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.0.0...v4.1.0) (2023-09-04)
+
+
+### Bug Fixes
+
+* :bug: fix behaviour for project-specific options ([ea82a08](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/ea82a08b65bdcc0a5eb3b28f594ca6b015c27268))
+* :bug: fix label for 'defer date' form ([80fafe6](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/80fafe65340e18a1d5e0b5c016cfb8ecc5f31e42))
+* :bug: only show 'add to root of project' when a project is selected ([0a1e186](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/0a1e1860f0dc7ab942874968d170d7608798e7a9))
+
+
+### Features
+
+* :sparkles: add 'append to note' action ([faebc24](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/faebc24d95c48a6487faba85e9da4a4a68382c00))
+* :sparkles: change action group tags to multi-select (0+) ([52bf760](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/52bf76041f71bfbe87e674e067ece4b75e8311ce)), closes [#21](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/issues/21)
+
+
+
 # [4.0.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v3.7.1...v4.0.0) (2023-09-03)
 
 
