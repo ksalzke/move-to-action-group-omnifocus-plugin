@@ -288,10 +288,13 @@
     lib.actionGroupForm = async (section, moveDetails) => {
         const fuzzySearchLib = lib.getFuzzySearchLib();
         const groups = await lib.potentialActionGroups(section);
-        const additionalOptions = ['Add to root of project', 'New action group'];
+        const additionalOptions = ['New action group'];
+        if (section instanceof Project)
+            additionalOptions.unshift('Add to root of project');
+        const defaultSelected = (section instanceof Project) ? 'Add to root of project' : groups[0];
         const formOptions = [...additionalOptions, ...groups];
         const formLabels = [...additionalOptions, ...groups.map(fuzzySearchLib.getTaskPath)];
-        const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, 'Add to root of project', null);
+        const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, defaultSelected, null);
         searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null);
         searchForm.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null);
         searchForm.addField(new Form.Field.Checkbox('promptForDueDate', 'Set Due Date', moveDetails.setDueDate), null);
