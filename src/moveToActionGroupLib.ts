@@ -251,7 +251,7 @@ interface ActionGroupLib extends PlugIn.Library {
 
       const location = lib.moveToTopOfFolder() ? folder.beginning : folder.ending
       const newProject = new Project(newProjectForm.values.projectName, location)
-      newProject.addTag(lib.prefTag('newProjectTag')) // TODO: stop being inherited by task
+      newProject.addTag(lib.prefTag('newProjectTag'))
       return newProject
     } else {
       // save project for next time
@@ -484,7 +484,7 @@ interface ActionGroupLib extends PlugIn.Library {
     const relevantSections = folder ? folder.flattenedSections : flattenedSections
     const activeSections = relevantSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status))
     const defaultSelected = activeSections.includes(defaultSelection) ? defaultSelection : null
-    return fuzzySearchLib.searchForm(['New project', ...activeSections], ['New project', ...activeSections.map(p => p.name)], defaultSelected, null) // TODO: return fuzzy matching for projects and folders
+    return fuzzySearchLib.searchForm(['New project', ...activeSections], ['New project', ...activeSections.map(p => p.name)], defaultSelected, null)
   }
 
   lib.newProjectForm = (): NewProjectForm => {
