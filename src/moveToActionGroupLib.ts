@@ -116,6 +116,7 @@ interface ActionGroupLib extends PlugIn.Library {
   promptForSection?: (defaultSelection: Project | Folder, folder: Folder | null) => Promise<Project | Folder>
   promptForTags?: (tasks: Task[]) => Promise<void>
   promptForActionGroup?: (filter: Project | Folder | null, moveDetails: MoveDetails) => Promise<{ actionGroup: Task, moveDetails: MoveDetails }>
+  createProject?(folder: Folder): Promise<Project>
   createActionGroup?: (location: Task | Project, moveDetails: MoveDetails) => Promise<Task>
   moveTasks?: (tasks: Task[], location: Task.ChildInsertionLocation) => Promise<void>
   promptForLocation?: (group: Task | Project, moveDetails: MoveDetails) => Promise<{ location: Task | Task.ChildInsertionLocation, moveDetails: MoveDetails }>
@@ -289,6 +290,10 @@ interface ActionGroupLib extends PlugIn.Library {
 
     if (actionGroupSelection === 'New action group' && filter instanceof Project) {
       newActionGroup = await lib.createActionGroup(filter, moveDetails)
+    } else if (actionGroupSelection === 'New action group') {
+      const section = await lib.promptForSection(filter, null)
+      const project = (section instanceof Folder) ? await lib.createProject(section) : section
+      newActionGroup = await lib.createActionGroup(project, moveDetails)
     }
 
     // repeat if selection is a project
@@ -314,6 +319,14 @@ interface ActionGroupLib extends PlugIn.Library {
     }
   }
 
+  lib.createProject = async (folder: Folder): Promise<Project> => {
+    const newProjectForm = lib.newProjectForm()
+    await newProjectForm.show('New Project Name', 'Continue')
+    const location = lib.moveToTopOfFolder() ? folder.beginning : folder.ending
+    const newProject = new Project(newProjectForm.values.projectName, location)
+    newProject.addTag(lib.prefTag('newProjectTag'))
+    return newProject
+  }
 
 
   lib.createActionGroup = async (newActionGroup: Task | Project, moveDetails: MoveDetails): Promise<Task> => {

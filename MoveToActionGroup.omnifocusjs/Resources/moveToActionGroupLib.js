@@ -124,6 +124,11 @@
         if (actionGroupSelection === 'New action group' && filter instanceof Project) {
             newActionGroup = await lib.createActionGroup(filter, moveDetails);
         }
+        else if (actionGroupSelection === 'New action group') {
+            const section = await lib.promptForSection(filter, null);
+            const project = (section instanceof Folder) ? await lib.createProject(section) : section;
+            newActionGroup = await lib.createActionGroup(project, moveDetails);
+        }
         // repeat if selection is a project
         else if (actionGroupSelection instanceof Task && actionGroupSelection.project || actionGroupSelection instanceof Project) {
             const project = actionGroupSelection instanceof Project ? actionGroupSelection : actionGroupSelection.project;
@@ -143,6 +148,14 @@
                 setDueDate: actionGroupForm.values.promptForDueDate
             }
         };
+    };
+    lib.createProject = async (folder) => {
+        const newProjectForm = lib.newProjectForm();
+        await newProjectForm.show('New Project Name', 'Continue');
+        const location = lib.moveToTopOfFolder() ? folder.beginning : folder.ending;
+        const newProject = new Project(newProjectForm.values.projectName, location);
+        newProject.addTag(lib.prefTag('newProjectTag'));
+        return newProject;
     };
     lib.createActionGroup = async (newActionGroup, moveDetails) => {
         // create action group
