@@ -4,10 +4,8 @@
     const lib = this.libraries[0]
     const tasks = [...selection.tasks, ...selection.projects.map(project => project.task)]
 
-    const groups = await lib.potentialActionGroups(null)
-
     const fuzzySearchLib = lib.getFuzzySearchLib()
-    const searchForm = fuzzySearchLib.searchForm(groups, groups.map(g => g.name), null, null)
+    const searchForm = fuzzySearchLib.remainingTasksFuzzySearchForm()
 
     await searchForm.show('Select Task', 'Append To Note')
     const location = searchForm.values.menuItem
