@@ -1,3 +1,13 @@
+# [4.2.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.1.0...v4.2.0) (2023-09-05)
+
+
+### Features
+
+* :lipstick: use current project as default as 'skip project' action group selection ([c95bd56](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/c95bd56dfcdb349ffdd965d984c81018e179aaaf))
+* :sparkles: include all remaining tasks in 'add to note' dialogue ([eeb30bc](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/eeb30bc790313f5676c5ab58448692bfc4fe7706))
+
+
+
 # [4.1.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.0.0...v4.1.0) (2023-09-04)
 
 

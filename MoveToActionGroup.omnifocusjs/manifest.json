@@ -3,7 +3,7 @@
   "identifier": "com.KaitlinSalzke.MoveToActionGroup",
   "author": "Kaitlin Salzke",
   "description": "Allows tasks to be more easily moved to within action groups.",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "actions": [
     {
       "identifier": "moveToActionGroup",
