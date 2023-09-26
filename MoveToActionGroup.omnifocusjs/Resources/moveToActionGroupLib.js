@@ -24,7 +24,7 @@
         if (lib.tagPrompt() && tasks.some(task => task.tags.length === 0))
             await lib.promptForTags(tasks);
         /*======= Prompt for folder (if relevant) =======*/
-        const folder = (promptForFolder) ? await lib.promptForFolder() : null; // folder: Omni Automation
+        const folder = (promptForFolder) ? await lib.promptForFolder() : null;
         /*------- Prompt for section (if enabled) -------*/
         const section = (promptForProject) ? await lib.promptForSection(defaultSelection, folder) : null; // section: Omni Automation
         /*------- Create new project if folder selected (and move and stop) -------*/
@@ -163,21 +163,21 @@
         await newActionGroupForm.show('Action Group Name', 'Create');
         newActionGroup = new Task(newActionGroupForm.values.groupName, newActionGroup);
         newActionGroup.completedByChildren = newActionGroupForm.values.completeWithLast;
-        const tag = await lib.getPrefTag('actionGroupTag');
-        if (newActionGroupForm.values.tagNewGroup)
-            newActionGroup.addTag(tag);
+        const tags = lib.actionGroupTags();
+        if (newActionGroupForm.values.tagNewGroup && tags.length > 0)
+            newActionGroup.addTags(tags);
         return newActionGroup;
     };
     lib.moveTasks = async (tasks, location) => {
         // clear any existing tags
-        const tag = await lib.getPrefTag('actionGroupTag');
+        const tags = lib.actionGroupTags();
         const inheritTags = lib.inheritTags();
         const hasExistingTags = tasks.map(task => task.tags.length > 0);
         moveTasks(tasks, location);
         save();
         for (let i = 0; i < tasks.length; i++) {
-            if (!hasExistingTags[i])
-                tasks[i].removeTag(tag);
+            if (!hasExistingTags[i] && tags.length > 0)
+                tasks[i].removeTags(tags);
             if (!hasExistingTags[i] && !inheritTags)
                 tasks[i].clearTags();
         }
@@ -242,7 +242,7 @@
             return tag;
         // if not set, show preferences pane and then try again)
         await this.action('preferences').perform();
-        return lib.getPrefTag(prefTag);
+        return await lib.getPrefTag(prefTag);
     };
     lib.actionGroupTags = () => {
         const syncedPrefs = lib.loadSyncedPrefs();
