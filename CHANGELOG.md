@@ -1,3 +1,12 @@
+## [4.2.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.2.0...v4.2.1) (2023-09-26)
+
+
+### Bug Fixes
+
+* :bug: fix bug where preferences menu was continuously shown when trying to move task(s) ([502937a](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/502937ad4322dcee0574d4c1bbc602b6775d1b80))
+
+
+
 # [4.2.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.1.0...v4.2.0) (2023-09-05)
 
 
