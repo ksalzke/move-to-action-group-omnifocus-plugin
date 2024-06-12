@@ -26,6 +26,7 @@ interface SyncedPrefLib extends PlugIn.Library {
 
 interface FuzzySearchLibrary extends PlugIn.Library {
   getTaskPath?: (task: Task) => string
+  getTaskPathWithFolders?: (task: Task) => string
   searchForm?: (allItems: any, itemTitles: string[], firstSelected: any, matchingFunction: Function | null) => FuzzySearchForm
   allTasksFuzzySearchForm?: () => FuzzySearchForm
   remainingTasksFuzzySearchForm?: () => FuzzySearchForm
@@ -133,6 +134,7 @@ interface ActionGroupLib extends PlugIn.Library {
   tagPrompt?: () => boolean
   inheritTags?: () => boolean
   moveToTopOfFolder?: () => boolean
+  showFoldersInList?: () => boolean
 
   // return forms
   tagForm?: () => TagForm
@@ -468,6 +470,12 @@ interface ActionGroupLib extends PlugIn.Library {
     else return false // TODO: consolidate actions into one 'get preference' action
   }
 
+  lib.showFoldersInList = (): boolean => {
+    const preferences = lib.loadSyncedPrefs()
+    if (preferences.read('showFoldersInList') !== null) return preferences.read('showFoldersInList')
+    else return false // TODO: consolidate actions into one 'get preference' action
+  }
+
   /*------------------ Get Forms -----------------*/
 
 
@@ -496,12 +504,14 @@ interface ActionGroupLib extends PlugIn.Library {
     const fuzzySearchLib = lib.getFuzzySearchLib()
     const groups = await lib.potentialActionGroups(section)
 
+
     const additionalOptions = ['New action group']
     if (section instanceof Project) additionalOptions.unshift('Add to root of project')
     const defaultSelected = (section instanceof Project) ? 'Add to root of project' : (document.windows[0].selection.tasks[0].containingProject) ? (document.windows[0].selection.tasks[0].containingProject.task) : groups[0]
 
     const formOptions = [...additionalOptions, ...groups]
-    const formLabels = [...additionalOptions, ...groups.map(fuzzySearchLib.getTaskPath)]
+    const mapFunction = lib.showFoldersInList() && section === null ? fuzzySearchLib.getTaskPathWithFolders : fuzzySearchLib.getTaskPath
+    const formLabels = [...additionalOptions, ...groups.map(mapFunction)]
     const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, defaultSelected, null)
     searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null)
     searchForm.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null)
