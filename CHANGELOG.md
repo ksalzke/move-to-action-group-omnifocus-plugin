@@ -1,3 +1,17 @@
+# [5.0.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.2.1...v5.0.0) (2024-06-12)
+
+
+### Bug Fixes
+
+* :bug: correct storage of synced preferences for this plug-in ([a3d77ab](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/a3d77abcc9bb6ea7973b27ef13be6d018e328980))
+
+
+### BREAKING CHANGES
+
+* synced preferencess now stored in com.KaitlinSalzke.MoveToActionGroup
+
+
+
 ## [4.2.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.2.0...v4.2.1) (2023-09-26)
 
 
