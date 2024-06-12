@@ -522,6 +522,7 @@ interface ActionGroupLib extends PlugIn.Library {
     const fuzzySearchLib = lib.getFuzzySearchLib()
     const groups = await lib.potentialActionGroups(section)
 
+
     const additionalOptions = ['New action group']
     if (section instanceof Project) additionalOptions.unshift('Add to root of project')
     const defaultSelected = (section instanceof Project) ? 'Add to root of project' : (document.windows[0].selection.tasks[0].containingProject) ? (document.windows[0].selection.tasks[0].containingProject.task) : groups[0]
