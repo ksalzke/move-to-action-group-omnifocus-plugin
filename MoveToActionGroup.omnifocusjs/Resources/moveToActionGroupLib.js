@@ -226,6 +226,10 @@
             const alert = new Alert('Fuzzy Search Library Required', 'For the Follow-Up Task plug-in to work correctly, the \'Fuzzy Search\' plug-in (https://github.com/ksalzke/fuzzy-search-library) is also required and needs to be added to the plug-in folder separately. Either you do not currently have this plugin installed, or it is not installed correctly.');
             alert.show(null);
         }
+        if (fuzzySearchPlugIn.version.isBefore(new Version('1.6.0'))) {
+            const alert = new Alert('Fuzzy Search Library Update Required', 'For the Follow-Up Task plug-in to continue to work correctly, the \'Fuzzy Search\' plug-in (https://github.com/ksalzke/fuzzy-search-library) needs to be updated to version 1.6.0 or later. Please download the latest version and re-install.');
+            alert.show(null);
+        }
         return fuzzySearchPlugIn.library('fuzzySearchLib');
     };
     /*================== Get Preference Info =================*/
