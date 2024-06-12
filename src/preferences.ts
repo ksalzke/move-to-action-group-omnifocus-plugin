@@ -6,6 +6,7 @@ interface PrefForm extends Form {
     projectPrompt?: boolean
     inheritTags?: boolean
     moveToTopOfFolder?: boolean
+    showFoldersInList?: boolean
     newProjectTag?: Tag | null
   }
 }
@@ -22,6 +23,7 @@ interface PrefForm extends Form {
     const tagPrompt = lib.tagPrompt()
     const inheritTags = lib.inheritTags()
     const moveToTopOfFolder = lib.moveToTopOfFolder()
+    const showFoldersInList = lib.showFoldersInList()
     const newProjectTag = lib.prefTag('newProjectTag')
 
     // create and show form
@@ -32,6 +34,7 @@ interface PrefForm extends Form {
     form.addField(new Form.Field.Checkbox('tagPrompt', 'Prompt for Tags', tagPrompt), null)
     form.addField(new Form.Field.Checkbox('inheritTags', 'Inherit Tags When Moving', inheritTags), null)
     form.addField(new Form.Field.Checkbox('moveToTopOfFolder', 'Move to Top of Folder When Creating Projects', moveToTopOfFolder), null)
+    form.addField(new Form.Field.Checkbox('showFoldersInList', 'Show Folders In List', showFoldersInList), null)
     const newProjectTagField = new Form.Field.Option('newProjectTag', 'New Project Tag', activeFlattenedTags, tagNames, newProjectTag, 'None')
     newProjectTagField.allowsNull = true
     form.addField(newProjectTagField, null)
@@ -46,6 +49,7 @@ interface PrefForm extends Form {
     syncedPrefs.write('tagPrompt', form.values.tagPrompt)
     syncedPrefs.write('inheritTags', form.values.inheritTags)
     syncedPrefs.write('moveToTopOfFolder', form.values.moveToTopOfFolder)
+    syncedPrefs.write('showFoldersInList', form.values.showFoldersInList)
     if (form.values.newProjectTag !== null) syncedPrefs.write('newProjectTagID', form.values.newProjectTag.id.primaryKey)
   })
 

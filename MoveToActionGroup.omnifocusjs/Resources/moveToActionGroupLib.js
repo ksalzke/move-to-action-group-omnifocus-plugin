@@ -279,6 +279,13 @@
         else
             return false; // TODO: consolidate actions into one 'get preference' action
     };
+    lib.showFoldersInList = () => {
+        const preferences = lib.loadSyncedPrefs();
+        if (preferences.read('showFoldersInList') !== null)
+            return preferences.read('showFoldersInList');
+        else
+            return false; // TODO: consolidate actions into one 'get preference' action
+    };
     /*------------------ Get Forms -----------------*/
     lib.tagForm = () => {
         const fuzzySearchLib = lib.getFuzzySearchLib();
@@ -306,7 +313,8 @@
             additionalOptions.unshift('Add to root of project');
         const defaultSelected = (section instanceof Project) ? 'Add to root of project' : (document.windows[0].selection.tasks[0].containingProject) ? (document.windows[0].selection.tasks[0].containingProject.task) : groups[0];
         const formOptions = [...additionalOptions, ...groups];
-        const formLabels = [...additionalOptions, ...groups.map(fuzzySearchLib.getTaskPath)];
+        const mapFunction = lib.showFoldersInList() && section === null ? fuzzySearchLib.getTaskPathWithFolders : fuzzySearchLib.getTaskPath;
+        const formLabels = [...additionalOptions, ...groups.map(mapFunction)];
         const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, defaultSelected, null);
         searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null);
         searchForm.addField(new Form.Field.Checkbox('promptForDeferDate', 'Set Defer Date', moveDetails.setDeferDate), null);
