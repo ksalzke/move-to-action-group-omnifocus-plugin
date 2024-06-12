@@ -1,3 +1,12 @@
+## [5.0.1](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v5.0.0...v5.0.1) (2024-06-12)
+
+
+### Bug Fixes
+
+* :bug: require update to v1.7.0 of fuzzy search plugin (and force version increment) ([8c6f76a](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/commit/8c6f76a0d8bfb2d2aa20bd398f6f1b276f21190b))
+
+
+
 # [5.0.0](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/compare/v4.2.1...v5.0.0) (2024-06-12)
 
 
