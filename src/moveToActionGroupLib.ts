@@ -27,6 +27,7 @@ interface SyncedPrefLib extends PlugIn.Library {
 interface FuzzySearchLibrary extends PlugIn.Library {
   getTaskPath?: (task: Task) => string
   getTaskPathWithFolders?: (task: Task) => string
+  getFolderPath?: (folder: Folder) => string
   searchForm?: (allItems: any, itemTitles: string[], firstSelected: any, matchingFunction: Function | null) => FuzzySearchForm
   allTasksFuzzySearchForm?: () => FuzzySearchForm
   remainingTasksFuzzySearchForm?: () => FuzzySearchForm
@@ -497,7 +498,18 @@ interface ActionGroupLib extends PlugIn.Library {
     const relevantSections = folder ? folder.flattenedSections : flattenedSections
     const activeSections = relevantSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status))
     const defaultSelected = activeSections.includes(defaultSelection) ? defaultSelection : null
-    return fuzzySearchLib.searchForm(['New project', ...activeSections], ['New project', ...activeSections.map(p => p.name)], defaultSelected, null)
+
+
+    const mappingFunction = (section: Folder | Project): string => {
+      if (!lib.showFoldersInList() || folder) return section.name
+      else if (section instanceof Project)
+        return fuzzySearchLib.getTaskPathWithFolders(section.task)
+      else if (section instanceof Folder)
+        return fuzzySearchLib.getFolderPath(section)
+    }
+
+
+    return fuzzySearchLib.searchForm(['New project', ...activeSections], ['New project', ...activeSections.map(mappingFunction)], defaultSelected, null)
   }
 
   lib.newProjectForm = (): NewProjectForm => {
@@ -515,8 +527,18 @@ interface ActionGroupLib extends PlugIn.Library {
     if (section instanceof Project) additionalOptions.unshift('Add to root of project')
     const defaultSelected = (section instanceof Project) ? 'Add to root of project' : (document.windows[0].selection.tasks[0].containingProject) ? (document.windows[0].selection.tasks[0].containingProject.task) : groups[0]
 
+
     const formOptions = [...additionalOptions, ...groups]
-    const mapFunction = lib.showFoldersInList() && section === null ? fuzzySearchLib.getTaskPathWithFolders : fuzzySearchLib.getTaskPath
+    const mapFunction = (task: Task) => {
+      if (section instanceof Project) {
+        // already filtered by project, show name only
+        return task.name
+      } else if (lib.showFoldersInList() && section === null) {
+        // no filter applies and folders are to be shown
+        return fuzzySearchLib.getTaskPathWithFolders(task)
+      }
+      else return fuzzySearchLib.getTaskPath(task)
+    }
     const formLabels = [...additionalOptions, ...groups.map(mapFunction)]
     const searchForm = fuzzySearchLib.searchForm(formOptions, formLabels, defaultSelected, null)
     searchForm.addField(new Form.Field.Checkbox('setPosition', 'Set position', false), null)
