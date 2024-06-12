@@ -395,7 +395,7 @@ interface ActionGroupLib extends PlugIn.Library {
 
     if (syncedPrefsPlugin !== null) {
       const syncedPrefLib: SyncedPrefLib = syncedPrefsPlugin.library('syncedPrefLibrary')
-      const SyncedPref: SyncedPref = new syncedPrefLib.SyncedPref('com.KaitlinSalzke.followUpTask')
+      const SyncedPref: SyncedPref = new syncedPrefLib.SyncedPref('com.KaitlinSalzke.MoveToActionGroup')
       return SyncedPref
     } else {
       const alert = new Alert(
