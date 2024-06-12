@@ -302,7 +302,15 @@
         const relevantSections = folder ? folder.flattenedSections : flattenedSections;
         const activeSections = relevantSections.filter(section => [Project.Status.Active, Project.Status.OnHold, Folder.Status.Active].includes(section.status));
         const defaultSelected = activeSections.includes(defaultSelection) ? defaultSelection : null;
-        return fuzzySearchLib.searchForm(['New project', ...activeSections], ['New project', ...activeSections.map(p => p.name)], defaultSelected, null);
+        const mappingFunction = (section) => {
+            if (!lib.showFoldersInList() || folder)
+                return section.name;
+            else if (section instanceof Project)
+                return fuzzySearchLib.getTaskPathWithFolders(section.task);
+            else if (section instanceof Folder)
+                return fuzzySearchLib.getFolderPath(section);
+        };
+        return fuzzySearchLib.searchForm(['New project', ...activeSections], ['New project', ...activeSections.map(mappingFunction)], defaultSelected, null);
     };
     lib.newProjectForm = () => {
         const newProjectForm = new Form();
