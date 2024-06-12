@@ -212,7 +212,7 @@
         const syncedPrefsPlugin = PlugIn.find('com.KaitlinSalzke.SyncedPrefLibrary', null);
         if (syncedPrefsPlugin !== null) {
             const syncedPrefLib = syncedPrefsPlugin.library('syncedPrefLibrary');
-            const SyncedPref = new syncedPrefLib.SyncedPref('com.KaitlinSalzke.followUpTask');
+            const SyncedPref = new syncedPrefLib.SyncedPref('com.KaitlinSalzke.MoveToActionGroup');
             return SyncedPref;
         }
         else {
