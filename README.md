@@ -13,16 +13,23 @@ Refer to ['issues'](https://github.com/ksalzke/move-to-action-group-omnifocus-pl
 
 # Installation & Set-Up
 
-## Synced Preferences Plug-In
+## Prerequisites 
 
-**Important note: for this plug-in bundle to work correctly, my [Synced Preferences for OmniFocus plug-in](https://github.com/ksalzke/synced-preferences-for-omnifocus) and [Fuzzy Search Library](https://github.com/ksalzke/fuzzy-search-library) are also required and need to be added to the plug-in folder separately.**
+This plug-in requires:
+* [Synced Preferences for OmniFocus](https://github.com/ksalzke/synced-preferences-for-omnifocus)
+* [Fuzzy Search Library](https://github.com/ksalzke/fuzzy-search-library)
+
+Install these separately before using this plug-in.
 
 ## Installation
 
-1. Download the [latest release](https://github.com/ksalzke/move-to-action-group-omnifocus-plugin/releases/latest).
-2. Unzip the downloaded file.
-3. Move the `.omnifocusjs` file to your OmniFocus plug-in library folder (or open it to install).
-4. Configure your preferences using the `Preferences` action.
+[![Install in OmniFocus](https://img.shields.io/badge/OmniFocus-Install-5E5CE6?style=flat-square)](https://ksalzke.github.io/omnifocus-plugin-installer/?repo=move-to-action-group-omnifocus-plugin)
+
+Select **Install** above, then follow the prompts.
+
+## Setup
+
+Configure your preferences using the `Preferences` action.
 
 # Actions
 
